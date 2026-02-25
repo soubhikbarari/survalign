@@ -1,0 +1,24 @@
+Package: survalign
+Title: Measure Group Alignment in Survey Data
+Version: 0.0.1
+Authors@R:
+    person("Soubhik", "Barari", , "barari-soubhik@norc.org", role = c("aut", "cre"))
+Description: Tools for measuring public opinion alignment within groups using cross-sectional or time series survey data.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+Imports:
+    dplyr,
+    stringr,
+    purrr,
+    tidyr,
+    ggplot2,
+    scales,
+    cli
+Suggests:
+    testthat (>= 3.0.0),
+    labelled,
+    tibble
+Config/testthat/edition: 3
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3

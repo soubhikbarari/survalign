@@ -1,0 +1,107 @@
+---
+title: "vignette"
+output: html_document
+---
+
+```{r preamble, echo=FALSE}
+devtools::load_all()
+```
+
+```{r load-lib}
+library(survalign)
+pid_colors <- c(
+  "Democrat"="blue", 
+  "Republican"="red", 
+  "Independent/Other"="grey"
+)
+```
+
+```{r load-ces-data}
+data(ces)
+```
+
+```{r check-ces-coverage}
+ces |>
+    plot_coverage(wave_col = "year", ques_stem = "immig")
+
+ces |>
+    plot_coverage(wave_col = "year", ques_stem = "spend")
+```
+
+```{r check-ces-support}
+# TODO: if no wave_col, just visualize either as bar plots
+ces |>
+    plot_support(wave_col = "year", weight_col = "weight", 
+                 group_col = "pid3", ques_stem = "immig")
+ces |>
+    plot_support(wave_col = "year", weight_col = "weight", 
+                 group_col = "pid3", ques_stem = "spend")
+```
+
+```{r check-ces-pairwise-support}
+ces |>
+  filter(pid3 == "Democrat") |>
+  plot_pairwise_support(ques_stem = "spend")
+ces |>
+  filter(pid3 == "Democrat") |>
+  plot_pairwise_support(ques_stem = "abort")
+```
+
+```{r measure-ces-pid-alignment}
+ces_spend_align <- ces |>
+  filter(year == 2020) |>
+  measure_alignment(
+    ques_stem = "spend",
+    group_col = "pid3",
+    id_col = "id"
+  )
+ces_spend_align |>
+  plot_cumulative_support()
+```
+
+```{r visualize-ces-pid-alignment}
+ces_core_align <- ces |>
+  filter(year == 2018) |>
+  measure_alignment(
+    ques_stem = "(abort|immig|enviro|guns|military|trade)",
+    group_col = "pid3",
+    id_col = "id"
+  )
+ces_core_align |>
+  plot_group_alignment(show_dists_as = "histogram")
+```
+
+```{r}
+ces_core_align |>
+  plot_alignment_curve(group_colors=pid_colors)
+```
+
+```{r summarise-pid-alignment}
+
+```
+
+```{r plot-alignment-interactive}
+# ces.align |>
+#     plot_alignment_curve(interactive = TRUE)
+```
+
+```{r ces-pid-aligment-over-time}
+
+```
+
+```{r ces-alt-aligment}
+
+```
+
+```{r load-gss}
+data(gss)
+```
+
+```{r binarize-gss}
+# gss |>
+#     binarize_responses(ques_stem = "immig", cut_point = 0.5)
+```
+
+```{r gss-alignment-over-time}
+
+```
