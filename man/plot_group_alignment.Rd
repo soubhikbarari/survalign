@@ -7,9 +7,8 @@
 plot_group_alignment(
   results,
   exclude_vals = "DK/REF",
-  type = c("density", "histogram"),
-  show_distributions = FALSE,
-  show_means = TRUE,
+  show_dists_as = c("histogram", "density", "none"),
+  show_mean = TRUE,
   ci_scale = 1.96
 )
 }
@@ -18,11 +17,9 @@ plot_group_alignment(
 
 \item{exclude_vals}{Group values to exclude.}
 
-\item{type}{Density or histogram.}
+\item{show_dists_as}{How to visualize distributions.}
 
-\item{show_distributions}{Logical; show distribution shapes.}
-
-\item{show_means}{Logical; show mean estimates and intervals.}
+\item{show_mean}{Logical; show mean estimates and intervals.}
 
 \item{ci_scale}{Multiplier for confidence intervals.}
 }

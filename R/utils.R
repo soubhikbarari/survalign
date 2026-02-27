@@ -15,7 +15,7 @@ resolve_ques <- function(data, ques_cols = NULL, ques_stem = NULL, exclude_cols 
     } else {
       paste(ques_stem, collapse = "|")
     }
-    ques_cols <- colnames(data)[stringr::str_detect(colnames(data), pattern)]
+    ques_cols <- colnames(data)[stringr::str_detect(colnames(data), stringr::regex(pattern))]
   } else {
     exclude_cols <- if (is.null(exclude_cols)) character(0) else exclude_cols
     ques_cols <- setdiff(colnames(data), exclude_cols)
@@ -64,15 +64,22 @@ dump_labels <- function(data, attr = c("label", "shortlabel"), file = NULL) {
 #' with optional NA recoding. Stores `binarized_cols` as an attribute.
 #' @param data Data frame containing the items.
 #' @param ques_cols Character vector of columns to binarize.
-#' @param prop_cutpoint Proportion threshold for default binarization.
-#' @param scale_cutpoint Named list of cutpoints by scale length.
+#' @param ques_stem Character vector of question stems to binarize.
+#' @param threshold Proportion threshold for default binarization.
+#' @param thresholds Named list of cutpoints by scale length.
 #' @param na_values Values to recode to NA before binarization.
 #' @return Data frame with binarized columns.
 #' @export
-binarize_responses <- function(data, ques_cols, prop_cutpoint = 0.5, scale_cutpoint = list(), na_values = NULL) {
-  if (prop_cutpoint < 0 | prop_cutpoint > 1) {
-    stop("prop_cutpoint must be between 0 and 1 (reflecting proportion of scale endpoint above which to code as 1)")
+binarize_responses <- function(data, ques_cols = NULL, ques_stem = NULL, threshold = 0.5, thresholds = list(), na_values = NULL) {
+  if (threshold < 0 | threshold > 1) {
+    stop("threshold must be between 0 and 1 (reflecting proportion of scale endpoint above which to code as 1)")
   }
+  
+  ques_cols <- resolve_ques(
+    data, 
+    ques_cols,
+    ques_stem
+  )
 
   if (any(!ques_cols %in% colnames(data))) {
     message("The following question columns are not present in the data and will be skipped: ", 
@@ -89,12 +96,12 @@ binarize_responses <- function(data, ques_cols, prop_cutpoint = 0.5, scale_cutpo
         return(.)
       }
 
-      if (!is.null(scale_cutpoint) && as.character(n_distinct(.)) %in% names(scale_cutpoint)) {
-        y <- as.numeric(. > scale_cutpoint[[as.character(n_distinct(.))]])
+      if (!is.null(thresholds) && as.character(n_distinct(.)) %in% names(thresholds)) {
+        y <- as.numeric(. > thresholds[[as.character(n_distinct(.))]])
       } else {
         x <- as.numeric(.)
         offset <- ifelse(min(x, na.rm = TRUE) == 1, 1, 0)
-        y <- as.numeric((x - offset) > prop_cutpoint * (n_distinct(x, na.rm=T) - 1))
+        y <- as.numeric((x - offset) > threshold * (n_distinct(x, na.rm=T) - 1))
       }
       if (all(is.na(y)) || length(unique(na.omit(y))) < 2) {
         warning("Binarization of column '", cur_column(), "' resulted in all NA or constant values")
@@ -166,9 +173,9 @@ plot_coverage <- function(
 #' Note: max value in each question column is treated as "support" value.
 #' 
 #' @param data Data frame containing the survey items.
-#' @param wave_col Column with wave identifiers (e.g., year).
+#' @param wave_col Column with wave identifiers (e.g., year); if missing, make bar plots.
 #' @param weight_col Weight column; if missing, equal weights are used.
-#' @param group_col Grouping column; if NULL, uses a single "all" group.
+#' @param group_col Grouping column; if missing, uses a single "all" group.
 #' @param facet_by Whether to facet by variable or group.
 #' @param ques_cols Optional character vector of question columns to include.
 #' @param ques_stem Optional vector of substrings used to match columns.
@@ -177,7 +184,7 @@ plot_coverage <- function(
 #' @export
 plot_support <- function(
   data, 
-  wave_col,
+  wave_col = NULL,
   weight_col = NULL,
   group_col = NULL,
   facet_by = c("variable", "group_col"),
@@ -186,15 +193,16 @@ plot_support <- function(
   show_labels = TRUE
 ) {
   data_clean <- data %>% select(-matches("_orig"))
-  wave_col <- as.character(wave_col)[1]
+  use_wave <- !is.null(wave_col)
+  wave_col <- if (use_wave) as.character(wave_col)[1] else NULL
   weight_col <- as.character(weight_col)[1]
   group_col <- as.character(group_col)[1]
-  if (!(wave_col %in% colnames(data_clean))) {
+  if (use_wave && !(wave_col %in% colnames(data_clean))) {
     stop("Wave variable '", wave_col, "' not present in the supplied data.")
   }
   if (is.null(group_col) || is.na(group_col)) {
     group_col <- "all"
-    data_clean$all <- "all"
+    data_clean$all <- ""
   } else if (!(group_col %in% colnames(data_clean))) {
     stop("Group variable '", group_col, "' not present in the supplied data.")
   }
@@ -203,11 +211,13 @@ plot_support <- function(
     data_clean[[weight_col]] <- 1
   }
 
+  group_by_cols <- c(wave_col, group_col)
+
   ques_cols <- resolve_ques(
     data = data_clean,
     ques_cols = ques_cols,
     ques_stem = ques_stem,
-    exclude_cols = c(wave_col, group_col, weight_col)
+    exclude_cols = c(group_by_cols, weight_col)
   )
   
   top_vals <- get_top_vals(
@@ -218,52 +228,89 @@ plot_support <- function(
   facet_by <- match.arg(facet_by)
 
   coverage <- data_clean %>%
-    select(all_of(c(wave_col, group_col, weight_col, ques_cols))) %>%
-    group_by_at(c(wave_col, group_col)) %>%
+    select(all_of(c(group_by_cols, weight_col, ques_cols))) %>%
+    group_by_at(group_by_cols) %>%
     summarise(across(all_of(ques_cols), ~100*weighted.mean(as.numeric(.x) == top_vals[[cur_column()]], w = .data[[weight_col]], na.rm = TRUE)), .groups = "drop")
 
   coverage_long <- coverage %>%
-    pivot_longer(cols = -any_of(c(wave_col, weight_col, group_col)), names_to = "variable", values_to = "pct_support") %>%
+    pivot_longer(cols = -any_of(c(group_by_cols, weight_col)), names_to = "variable", values_to = "pct_support") %>%
     filter(!is.na(pct_support)) %>%
     rename_at(vars(all_of(group_col)), ~"group_col") %>%
     filter(!is.na(group_col)) %>%
-    mutate(variable = stringr::str_to_kebab(variable)) 
-  if (length(unique(coverage_long$variable)) > 10) {
-    warning("More than 10 variables to plot; heatmap may be hard to read.")
-  }
-  
-  if (facet_by == "variable") {
-    p <- coverage_long %>%
-      ggplot(aes(y = group_col, x = .data[[wave_col]], fill = pct_support)) +
-      geom_tile(color = "white")
-    if (show_labels) {
-      p <- p + geom_text(aes(label = sprintf("%.0f", pct_support),
-                    color = ifelse(pct_support > 50, "black", "white")), size = 3)
+    mutate(variable = stringr::str_to_kebab(variable))
+
+  if (!use_wave) {
+    # Bar plot when no wave_col is provided
+    if (length(unique(coverage_long$variable)) > 10) {
+      warning("More than 10 variables to plot; bar plot may be hard to read.")
     }
-    p + 
-      facet_grid(variable ~ ., scales = "free", space = "free") +
-      scale_fill_viridis_b(name = "Percent support:") +
-      scale_color_identity() +
-      theme_bw() +
-      labs("x" = "Year", "y" = group_col) +
-      theme(legend.position = "top",
-            strip.text.y.right = element_text(angle = 0))
+    if (facet_by == "variable") {
+      p <- coverage_long %>%
+        ggplot(aes(x = pct_support, y = group_col)) +
+        geom_bar(stat = "identity", fill = "steelblue")
+      if (show_labels) {
+        p <- p + geom_text(aes(label = sprintf("%.0f%%", pct_support)),
+                           hjust = -0.2, size = 3)
+      }
+      p +
+        facet_grid(variable ~ ., scales = "free", space = "free") +
+        scale_x_continuous(limits = c(0, 110), name = "Percent support") +
+        theme_bw() +
+        labs(y = NULL) +
+        theme(strip.text.y.right = element_text(angle = 0))
+    } else {
+      p <- coverage_long %>%
+        ggplot(aes(x = pct_support, y = variable)) +
+        geom_bar(stat = "identity", fill = "steelblue")
+      if (show_labels) {
+        p <- p + geom_text(aes(label = sprintf("%.0f%%", pct_support)),
+                           hjust = -0.2, size = 3)
+      }
+      p +
+        facet_grid(group_col ~ ., scales = "free", space = "free") +
+        scale_x_continuous(limits = c(0, 110), name = "Percent support") +
+        theme_bw() +
+        labs(y = NULL) +
+        theme(strip.text.y.right = element_text(angle = 0))
+    }
   } else {
-    p <- coverage_long %>%
-      ggplot(aes(y = variable, x = .data[[wave_col]], fill = pct_support)) +
-      geom_tile(color = "white")
-    if (show_labels) {
-      p <- p + geom_text(aes(label = sprintf("%.0f", pct_support),
-                    color = ifelse(pct_support > 50, "black", "white")), size = 3)
+    # Heatmap when wave_col is provided
+    if (length(unique(coverage_long$variable)) > 10) {
+      warning("More than 10 variables to plot; heatmap may be hard to read.")
     }
-    p +
-      facet_grid(group_col ~ ., scales = "free", space = "free") +
-      scale_fill_viridis_b(name = "Percent support:") +
-      scale_color_identity() +
-      theme_bw() +
-      labs("x" = "Year", "y" = "Item") +
-      theme(legend.position = "top",
-            strip.text.y.right = element_text(angle = 0))  
+    if (facet_by == "variable") {
+      p <- coverage_long %>%
+        ggplot(aes(y = group_col, x = .data[[wave_col]], fill = pct_support)) +
+        geom_tile(color = "white")
+      if (show_labels) {
+        p <- p + geom_text(aes(label = sprintf("%.0f", pct_support),
+                      color = ifelse(pct_support > 50, "black", "white")), size = 3)
+      }
+      p + 
+        facet_grid(variable ~ ., scales = "free", space = "free") +
+        scale_fill_viridis_b(name = "Percent support:") +
+        scale_color_identity() +
+        theme_bw() +
+        labs("x" = "Year", "y" = group_col) +
+        theme(legend.position = "top",
+              strip.text.y.right = element_text(angle = 0))
+    } else {
+      p <- coverage_long %>%
+        ggplot(aes(y = variable, x = .data[[wave_col]], fill = pct_support)) +
+        geom_tile(color = "white")
+      if (show_labels) {
+        p <- p + geom_text(aes(label = sprintf("%.0f", pct_support),
+                      color = ifelse(pct_support > 50, "black", "white")), size = 3)
+      }
+      p +
+        facet_grid(group_col ~ ., scales = "free", space = "free") +
+        scale_fill_viridis_b(name = "Percent support:") +
+        scale_color_identity() +
+        theme_bw() +
+        labs("x" = "Year", "y" = "Item") +
+        theme(legend.position = "top",
+              strip.text.y.right = element_text(angle = 0))  
+    }
   }
 }
 

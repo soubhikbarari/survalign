@@ -28,7 +28,7 @@ plot_cumulative_support <- function(
       majority_cutoff & prop_cumulative_plurality < 0.5 ~ FALSE,
       .default = TRUE
     )) %>%
-    mutate(first_below = if_else(!keep & row_id == min(row_id[!keep]), TRUE, FALSE)) %>%
+    mutate(first_below = if_else(!keep & suppressWarnings(row_id == min(row_id[!keep])), TRUE, FALSE)) %>%
     filter(keep | first_below) %>%
     select(-keep, -first_below, -row_id) %>%
     ungroup() %>%
@@ -103,7 +103,7 @@ plot_group_alignment <- function(
       geom_density(fill="grey", color="grey")
   } else if (show_dists_as=="histogram") {
     plot <- plot +
-      geom_histogram(fill="grey", color="grey")
+      geom_histogram(fill="grey", color="grey", bins = 10)
   } 
   plot <- plot +
     scale_fill_discrete(name = attr(results, "group_label")) +
@@ -140,14 +140,17 @@ plot_group_alignment <- function(
 #' @param group_colors Optional manual colors.
 #' @param exclude_vals Group values to exclude.
 #' @param resolution Vector of quantiles to evaluate.
-#' @return ggplot object.
+#' @param interactive Logical; if TRUE, return an interactive plotly widget with
+#'   per-point tooltips. Requires the \code{plotly} package.
+#' @return A ggplot object, or a plotly widget when \code{interactive = TRUE}.
 #' @export
 plot_alignment_curve <- function(
     results, 
     group_label = attr(results, "group_label"),
     group_colors = NULL,
     exclude_vals = "DK/REF", 
-    resolution = seq(0, 1, by = 0.01)
+    resolution = seq(0, 1, by = 0.01),
+    interactive = FALSE
 ) {
   binarized <- !all(is.null(attr(results, "binarized_cols")))
   cumul_align <- resolution %>%
@@ -160,38 +163,77 @@ plot_alignment_curve <- function(
                     .groups = "drop")) %>%
     bind_rows() %>%
     mutate(val_label = as.character(.[[attr(results, "group_col")]]))
-  # mutate(val_label = paste0(as.character(.[[attr(results, "group_col")]]) %>%
-  #                             trimws(whitespace = "[ \t\r\n“”]") %>%
-  #                             stringr::str_to_title(), 
-  #                           " (n=",n,")"))  
-  p <- cumul_align %>%
-    distinct(p, .keep_all = TRUE) %>%
-    ggplot(aes(y=q, x=p, 
-               color=val_label, 
-               shape=val_label,
-               linetype=val_label)) +
-    geom_point() +
-    geom_line(linewidth=1) +
-    geom_vline(xintercept = 0.5, alpha = 0.5) + 
+
+  cumul_align <- cumul_align %>%
+    bind_rows(
+      cumul_align %>%
+        group_by_at(attr(results, "group_col")) %>%
+        summarise(q = 1, p = 0, n = first(n), val_label = first(val_label), .groups = "drop")
+    )
+
+  plot_data <- cumul_align %>%
+    distinct_at(c(attr(results, "group_col"), "p"), .keep_all = TRUE) %>%
+    mutate(
+      tooltip = sprintf(
+        "<b>%s%%</b> of %s respondents\nagree with the %s majority\non <b>%s%% or more</b> of issues",
+        round(p * 100, 1), val_label, val_label, round(q * 100, 1)
+      )
+    )
+
+  p <- plot_data %>%
+    ggplot(aes(y = q, x = p,
+               color = val_label,
+               group = val_label,
+               shape = val_label,
+               linetype = val_label,
+               text = tooltip)) +
+    geom_line(linewidth = 1) +
+    geom_vline(xintercept = 0.5, alpha = 0.5) +
     geom_hline(yintercept = 0.5, alpha = 0.5)
-  
+
   if (!is.null(group_colors)) {
-    p <- p + scale_color_manual(values = group_colors, , name=paste0(group_label,":"))
+    p <- p + scale_color_manual(values = group_colors, name = paste0(group_label, ":"))
   } else {
-    p <- p + scale_color_brewer(palette = "Set1", name=paste0(group_label,":")) 
+    p <- p + scale_color_brewer(palette = "Set1", name = paste0(group_label, ":"))
   }
-  p <- p + 
-    scale_shape_discrete(name=paste0(group_label,":")) +
-    scale_linetype_manual(values = c("solid", "dotted", "dotdash", "longdash", "twodash", "dashdot"),
-                          name=paste0(group_label,":")) +
-    geom_line(size=1) +
-    scale_y_continuous(label = scales::percent_format(1),
-                       limits = c(0, 1),
-                       name = "who support % (or more) group majority positions") +
-    scale_x_continuous(label=scales::percent_format(1),
-                       limits = c(0, 1),
-                       name="% of respondents...") +
+  p <- p +
+    scale_shape_discrete(name = paste0(group_label, ":")) +
+    scale_linetype_manual(
+      values = c("solid", "dotted", "dotdash", "longdash", "twodash", "dashdot"),
+      name = paste0(group_label, ":")
+    ) +
+    scale_y_continuous(
+      label = scales::percent_format(1),
+      limits = c(0, 1),
+      name = "who support % (or more) group majority positions"
+    ) +
+    scale_x_continuous(
+      label = scales::percent_format(1),
+      limits = c(0, 1),
+      name = "% of respondents..."
+    ) +
     theme_bw()
+
+  if (interactive) {
+    if (!requireNamespace("plotly", quietly = TRUE)) {
+      message(
+        paste0(
+          "Package 'plotly' is required for interactive = TRUE. ",
+          "Install now?"
+        )
+      )
+      . <- readline("\n\nY: yes\nN: no\n")
+      if (startsWith(tolower(.), "y")) {
+        install.packages("plotly")
+      } else {
+        message("Installation skipped.")
+        return(NULL)
+      }
+    }
+    p <- p + theme(legend.position = "bottom")
+    return(plotly::ggplotly(p, tooltip = "text"))
+  }
+
   p
 }
 
@@ -255,6 +297,14 @@ plot_group_stat_over_time <- function(
   } else {
     ""
   }
+  y_label <- paste0(y_label, "*")
+  cap_label <- if (!is.null(sample_result)) {
+    lab <- attr(sample_result$group_stats[[metric]], "description")
+    if (!is.null(lab) && nzchar(lab)) lab else ""
+  } else {
+    ""
+  }
+  cap_label <- paste0("*", cap_label)
   
   # Prepare plotting data
   plot_data <- group_stats_t
@@ -283,6 +333,7 @@ plot_group_stat_over_time <- function(
   }
   
   p <- p +
+    labs(caption=cap_label) +
     theme_bw() +
     theme(legend.position = "top",
           strip.text.y = element_text(angle = 0, size = rel(1.25)))

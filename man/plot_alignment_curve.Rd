@@ -9,11 +9,12 @@ plot_alignment_curve(
   group_label = attr(results, "group_label"),
   group_colors = NULL,
   exclude_vals = "DK/REF",
-  resolution = seq(0, 1, by = 0.01)
+  resolution = seq(0, 1, by = 0.01),
+  interactive = FALSE
 )
 }
 \arguments{
-\item{results}{Output from \code{analyze_opinion_coalitions}.}
+\item{results}{Output from \code{measure_alignment()}.}
 
 \item{group_label}{Optional label for legend.}
 
@@ -22,9 +23,12 @@ plot_alignment_curve(
 \item{exclude_vals}{Group values to exclude.}
 
 \item{resolution}{Vector of quantiles to evaluate.}
+
+\item{interactive}{Logical; if TRUE, return an interactive plotly widget with
+per-point tooltips. Requires the \code{plotly} package.}
 }
 \value{
-ggplot object.
+A ggplot object, or a plotly widget when \code{interactive = TRUE}.
 }
 \description{
 Plot cumulative alignment curves by group.

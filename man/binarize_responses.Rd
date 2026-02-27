@@ -6,9 +6,10 @@
 \usage{
 binarize_responses(
   data,
-  ques_cols,
-  prop_cutpoint = 0.5,
-  scale_cutpoint = list(),
+  ques_cols = NULL,
+  ques_stem = NULL,
+  threshold = 0.5,
+  thresholds = list(),
   na_values = NULL
 )
 }
@@ -17,9 +18,11 @@ binarize_responses(
 
 \item{ques_cols}{Character vector of columns to binarize.}
 
-\item{prop_cutpoint}{Proportion threshold for default binarization.}
+\item{ques_stem}{Character vector of question stems to binarize.}
 
-\item{scale_cutpoint}{Named list of cutpoints by scale length.}
+\item{threshold}{Proportion threshold for default binarization.}
+
+\item{thresholds}{Named list of cutpoints by scale length.}
 
 \item{na_values}{Values to recode to NA before binarization.}
 }

@@ -6,7 +6,7 @@
 \usage{
 plot_support(
   data,
-  wave_col,
+  wave_col = NULL,
   weight_col = NULL,
   group_col = NULL,
   facet_by = c("variable", "group_col"),
@@ -18,11 +18,11 @@ plot_support(
 \arguments{
 \item{data}{Data frame containing the survey items.}
 
-\item{wave_col}{Column with wave identifiers (e.g., year).}
+\item{wave_col}{Column with wave identifiers (e.g., year); if missing, make bar plots.}
 
 \item{weight_col}{Weight column; if missing, equal weights are used.}
 
-\item{group_col}{Grouping column; if NULL, uses a single "all" group.}
+\item{group_col}{Grouping column; if missing, uses a single "all" group.}
 
 \item{facet_by}{Whether to facet by variable or group.}
 

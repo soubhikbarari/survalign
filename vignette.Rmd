@@ -1,5 +1,5 @@
 ---
-title: "vignette"
+title: "SurvAlign Tutorial"
 output: html_document
 ---
 
@@ -9,6 +9,7 @@ devtools::load_all()
 
 ```{r load-lib}
 library(survalign)
+
 pid_colors <- c(
   "Democrat"="blue", 
   "Republican"="red", 
@@ -16,92 +17,284 @@ pid_colors <- c(
 )
 ```
 
+# Case Study: Measuring Group Alignment in the Cooperative Election Study (CES)
+
 ```{r load-ces-data}
 data(ces)
 ```
 
+## Exploring the Data
+
 ```{r check-ces-coverage}
 ces |>
-    plot_coverage(wave_col = "year", ques_stem = "immig")
+    plot_coverage(wave_col="year", ques_stem="immig")
 
 ces |>
-    plot_coverage(wave_col = "year", ques_stem = "spend")
+    plot_coverage(wave_col="year", ques_stem="spend")
 ```
 
 ```{r check-ces-support}
-# TODO: if no wave_col, just visualize either as bar plots
+# Temporal support
 ces |>
-    plot_support(wave_col = "year", weight_col = "weight", 
-                 group_col = "pid3", ques_stem = "immig")
+  plot_support(wave_col="year", weight_col="weight", 
+               group_col="pid3", ques_stem="immig") +
+  ggtitle("Support for CES Immigration Items")
+
+# Cross-sectional support 
 ces |>
-    plot_support(wave_col = "year", weight_col = "weight", 
-                 group_col = "pid3", ques_stem = "spend")
+  filter(year == 2020) |>
+  plot_support(weight_col="weight", group_col="pid3", ques_stem="immig") +
+  ggtitle("Support for CES Core Issue Items (2020)")
 ```
 
 ```{r check-ces-pairwise-support}
 ces |>
-  filter(pid3 == "Democrat") |>
-  plot_pairwise_support(ques_stem = "spend")
+  filter(pid3 == "Democrat", year == 2020) |>
+  plot_pairwise_support(ques_stem="spend")
 ces |>
-  filter(pid3 == "Democrat") |>
-  plot_pairwise_support(ques_stem = "abort")
+  filter(pid3 == "Democrat", year == 2020) |>
+  plot_pairwise_support(ques_stem="abort")
+```
+
+## Measuring Alignment
+
+```{r write-ces-ques}
+cat("\n#### CES Core Policy Preference Items\n")
+ces_core_items <- colnames(ces)[grepl("(abort|immig|enviro|guns|military|trade)", colnames(ces))]
+for (item in ces_core_items) {
+  cat(paste0("\n- ", item, ": ", attr(ces[[item]], "label")))
+}
 ```
 
 ```{r measure-ces-pid-alignment}
-ces_spend_align <- ces |>
+ces20_spend_align <- ces |>
   filter(year == 2020) |>
   measure_alignment(
-    ques_stem = "spend",
-    group_col = "pid3",
-    id_col = "id"
+    ques_stem="spend",
+    group_col="pid3",
+    id_col="id"
   )
-ces_spend_align |>
+ces20_spend_align |>
   plot_cumulative_support()
 ```
 
-```{r visualize-ces-pid-alignment}
-ces_core_align <- ces |>
-  filter(year == 2018) |>
+```{r plot-ces-pid-alignment}
+ces24_core_align <- ces |>
+  filter(year == 2024) |>
   measure_alignment(
-    ques_stem = "(abort|immig|enviro|guns|military|trade)",
-    group_col = "pid3",
-    id_col = "id"
+    ques_stem="(abort|immig|enviro|guns|military|trade)",
+    group_col="pid3",
+    id_col="id"
   )
-ces_core_align |>
-  plot_group_alignment(show_dists_as = "histogram")
+ces24_core_align |>
+  plot_group_alignment(show_dists_as="histogram")
 ```
 
-```{r}
-ces_core_align |>
+```{r plot-ces-pid-alignment-curve}
+ces24_core_align |>
   plot_alignment_curve(group_colors=pid_colors)
 ```
 
-```{r summarise-pid-alignment}
-
+```{r summarise-ces-pid-alignment}
+summary(ces24_core_align, format="long")
 ```
 
-```{r plot-alignment-interactive}
-# ces.align |>
-#     plot_alignment_curve(interactive = TRUE)
+```{r plot-ces-pid-alignment-interactive}
+ces24_core_align |>
+    plot_alignment_curve(group_colors=pid_colors, interactive=TRUE)
 ```
 
-```{r ces-pid-aligment-over-time}
+## Alignment with Different Missing Value Assumptions
 
+```{r ces-treat-na-as-unalign}
+ces24_core_align_na <- ces |>
+  filter(year == 2024) |>
+  measure_alignment(
+    ques_stem="(abort|immig|enviro|guns|military|trade)",
+    group_col="pid3",
+    id_col="id",
+    treat_na="unaligned"
+  )
+
+ces24_core_align_na |>
+    plot_alignment_curve(group_colors = pid_colors)
 ```
 
-```{r ces-alt-aligment}
+## Alignment Over Time
 
+```{r ces-pid-core-aligment-over-time}
+# Measure alignment over time
+ces_pid_align <- ces |>
+  measure_alignment_waves(
+    ques_stem="(abort|immig|enviro|guns|military|trade)",
+    group_col  = "pid3",
+    wave_col   = "year",
+    id_col     = "id",
+    weight_col = "weight",
+    verbose    = FALSE
+  )
 ```
+
+```{r ces-alignment-mean-over-time}
+ces_pid_align |>
+  plot_group_stat_over_time(
+    metric       = "alignment_mean",
+    wave_col     = "year",
+    group_col    = "pid3",
+    group_label  = "Party ID",
+    group_colors = pid_colors
+  )
+```
+
+```{r ces-weak-alignment-over-time}
+ces_pid_align |>
+  plot_group_stat_over_time(
+    metric       = "cumulative_weak_alignment",
+    wave_col     = "year",
+    group_col    = "pid3",
+    group_label  = "Party ID",
+    group_colors = pid_colors
+  )
+```
+
+## Alignment on Different Issue Items
+
+```{r write-ces-spend-ques}
+cat("\n#### CES National Spending Items\n")
+ces_spending_items <- colnames(ces)[grepl("spend", colnames(ces))]
+for (item in ces_spending_items) {
+  cat(paste0("\n- ", item, ": ", attr(ces[[item]], "label")))
+}
+```
+
+```{r ces-pid-spending-aligment-over-time}
+# Plot support
+ces |>
+  plot_support(wave_col="year", weight_col="weight", 
+               group_col="pid3", ques_stem="spend") +
+  ggtitle("Support for CES Spending Items")
+
+# Measure alignment
+ces_spend_align <- ces |>
+  measure_alignment_waves(
+    ques_stem  = "spend",
+    group_col  = "pid3",
+    wave_col   = "year",
+    id_col     = "id",
+    weight_col = "weight",
+    verbose    = FALSE
+  )
+
+# Plot alignment means
+ces_spend_align |>
+  plot_group_stat_over_time(
+    metric       = "alignment_mean",
+    wave_col     = "year",
+    group_col    = "pid3",
+    group_label  = "Party ID",
+    group_colors = pid_colors
+  )
+
+# Plot cumulative weak alignment
+ces_spend_align |>
+  plot_group_stat_over_time(
+    metric       = "cumulative_weak_alignment",
+    wave_col     = "year",
+    group_col    = "pid3",
+    group_label  = "Party ID",
+    group_colors = pid_colors
+  )
+```
+
+## Alignment with Different Groups
+
+```{r ces-educ-align}
+ces24_race_align <- ces |>
+  filter(year == 2024) |>
+  measure_alignment(
+    ques_stem="(abort|immig|enviro|guns|military|trade)",
+    group_col="race5",
+    id_col="id"
+  )
+
+ces24_race_align |>
+  plot_alignment_curve()
+```
+
+# Case Study: Measuring Group Alignment in the General Social Survey (GSS)
 
 ```{r load-gss}
 data(gss)
 ```
 
-```{r binarize-gss}
-# gss |>
-#     binarize_responses(ques_stem = "immig", cut_point = 0.5)
+```{r check-gss}
+gss_cols <- colnames(gss)
+
+gss_spending_items <- gss_cols[grepl("^nat.*_b", gss_cols)]
+gss_social_items <- gss_cols[grepl(".*_b", gss_cols) & !grepl("^nat", gss_cols)]
 ```
 
-```{r gss-alignment-over-time}
+```{r write-gss-ques}
+cat("\n#### GSS National Spending Battery\n")
+for (item in gss_spending_items) {
+  cat(paste0("\n- ", item, ": ", attr(gss[[item]], "label")))
+}
 
+cat("\n#### GSS Social Battery\n")
+for (item in gss_social_items) {
+  cat(paste0("\n- ", item, ": ", attr(gss[[item]], "label")))
+}
+```
+
+```{r plot-gss}
+gss |>
+    plot_coverage(wave_col="year", 
+                  ques_cols=gss_spending_items)
+gss |>
+    plot_support(wave_col="year", 
+                 weight_col="weight_sps",
+                 ques_cols=gss_spending_items,
+                 show_labels=FALSE)
+```
+
+Not all survey data comes with binarized questions. If so, the `binarize_responses()`
+may come in handy.
+
+```{r binarize-gss}
+table(gss$natcity_b)
+gss_b <- gss |>
+    binarize_responses(ques_stem="^nat", threshold=0.5)
+table(gss_b$natcity_b)
+```
+
+
+```{r gss-alignment-over-time}
+# Measure alignment
+gss_spending_educ_align <- gss |>
+  filter(year > 1972, !is.na(weight_sps)) |>
+  measure_alignment_waves(
+    ques_stem  = "nat.*_b",
+    group_col  = "educ5",
+    wave_col   = "year",
+    id_col     = "id",
+    weight_col = "weight_sps",
+    verbose    = FALSE
+  )
+
+# Plot alignment means
+gss_spending_educ_align |>
+  plot_group_stat_over_time(
+    metric       = "alignment_mean",
+    wave_col     = "year",
+    group_col    = "educ5",
+    group_label  = "Education"
+  )
+
+gss_spending_educ_align |>
+  plot_group_stat_over_time(
+    metric       = "cumulative_weak_alignment",
+    wave_col     = "year",
+    group_col    = "educ5",
+    group_label  = "Education"
+  )
 ```

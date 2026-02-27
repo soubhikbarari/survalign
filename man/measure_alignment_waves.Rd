@@ -6,13 +6,15 @@
 \usage{
 measure_alignment_waves(
   data,
-  ques_cols,
+  ques_cols = NULL,
+  ques_stem = NULL,
   group_col,
   wave_col = "year",
   waves = NULL,
   id_col = "case_id",
   weight_col = "weight",
   binarize = FALSE,
+  na_action = c("warn", "fail"),
   binarize_args = list(),
   progress = TRUE,
   ...
@@ -22,6 +24,8 @@ measure_alignment_waves(
 \item{data}{Data frame containing all waves.}
 
 \item{ques_cols}{Character vector of question columns.}
+
+\item{ques_stem}{Optional vector of substrings/regex used to match columns.}
 
 \item{group_col}{Grouping variable or named list for labeling.}
 
@@ -34,6 +38,8 @@ measure_alignment_waves(
 \item{weight_col}{Optional weight column name.}
 
 \item{binarize}{Logical; apply \code{binarize_items} before analysis.}
+
+\item{na_action}{Logical; if a wave is missing, either throw error or warning.}
 
 \item{binarize_args}{Named list of arguments for \code{binarize_items}.}
 

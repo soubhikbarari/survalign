@@ -236,22 +236,29 @@ measure_alignment <- function(
                 .groups = "drop"),
       by = group_col)
   
-  attr(group_stats$cumulative_perfect_alignment, "label") <- 
-    "% of respondents perfectly aligned (side with group plurality across issues)"
-  attr(group_stats$cumulative_weak_alignment, "label") <- 
-    "% of respondents weakly aligned (side with group plurality across most issues)"
-  attr(group_stats$alignment_mean, "label") <- 
-    "Average alignment (share of responses in group plurality) across respondents"
-  attr(group_stats$alignment_median, "label") <- 
-    "Median alignment (share of responses in group plurality) across respondents"
-  attr(group_stats$alignment_se, "label") <- 
-    "Standard error of alignment (share of responses in group plurality) across respondents"
-  attr(group_stats$mean_plurality, "label") <- 
-    "Average plurality (share of respondents in group plurality) across issues"
-  attr(group_stats$cumulative_issue_alignment_n, "label") <- 
-    "Cumulative issue alignment (number of issues where most respondents side with cumulative group plurality)"
-  attr(group_stats$cumulative_issue_alignment_prop, "label") <- 
-    "Cumulative issue alignment (prop. of issues where most respondents side with cumulative group plurality)"
+  attr(group_stats$cumulative_perfect_alignment, "label") <- "Percent of respondents perfectly aligned"
+  attr(group_stats$cumulative_perfect_alignment, "description") <- "Respondents who support their group's plurality position across all issues"
+  
+  attr(group_stats$cumulative_weak_alignment, "label") <- "Percent of respondents weakly aligned"
+  attr(group_stats$cumulative_weak_alignment, "description") <- "Respondents who support their group's plurality position across most issues"
+  
+  attr(group_stats$alignment_mean, "label") <- "Average percent of respondent alignment"
+  attr(group_stats$alignment_mean, "description") <- "Average percent of issues where respondent supports their group's plurality position"
+  
+  attr(group_stats$alignment_median, "label") <- "Median percent of respondent alignment"
+  attr(group_stats$alignment_median, "description") <- "Median percent of issues where respondent supports their group's plurality position"
+  
+  attr(group_stats$alignment_se, "label") <- "Standard error of respondent alignment"
+  attr(group_stats$alignment_se, "description") <- "Standard error of percent of issues where respondent supports their group's plurality position"
+  
+  attr(group_stats$mean_plurality, "label") <- "Average plurality"
+  attr(group_stats$mean_plurality, "description") <- "Average percent of respondents aligned with group plurality across all issues"
+  
+  attr(group_stats$cumulative_issue_alignment_n, "label") <- "Cumulative issue alignment (N)"
+  attr(group_stats$cumulative_issue_alignment_n, "description") <- "Number of issues where a majority of respondents support their group's plurality position"
+  
+  attr(group_stats$cumulative_issue_alignment_prop, "label") <- "Cumulative issue alignment (%)"
+  attr(group_stats$cumulative_issue_alignment_prop, "description") <- "Percent of issues where a majority of respondents support their group's plurality position"
 
   # Output all dataframes
   output <- list(
@@ -292,6 +299,26 @@ print.survalign <- function(x, ...) {
   invisible(x)
 }
 
+#' Summary method for survalign objects.
+#'
+#' Returns group-level alignment statistics from a `survalign` object created by `measure_alignment()`.
+#'
+#' @param object An object of class 'survalign'.
+#' @param ... Additional arguments (ignored).
+#' @return A data frame of group stats, including respondent alignment and plurality metrics.
+#' @export
+summary.survalign <- function(object, format = c("wide", "long")) {
+  format <- match.arg(format)
+  if (format == "wide") {
+    return(object$group_stats)
+  } else {
+    return(object$group_stats %>%
+             pivot_longer(-any_of(attr(object, "group_col")),
+                          names_to = "statistic", values_to = "value"))
+  }
+}
+
+
 
 #' Analyze opinion coalitions across waves.
 #'
@@ -299,6 +326,7 @@ print.survalign <- function(x, ...) {
 #' optionally binarizing items before analysis.
 #' @param data Data frame containing all waves.
 #' @param ques_cols Character vector of question columns.
+#' @param ques_stem Optional vector of substrings/regex used to match columns.
 #' @param group_col Grouping variable or named list for labeling.
 #' @param wave_col Column containing wave identifiers.
 #' @param waves Optional vector of waves to analyze.
@@ -306,23 +334,28 @@ print.survalign <- function(x, ...) {
 #' @param weight_col Optional weight column name.
 #' @param binarize Logical; apply `binarize_items` before analysis.
 #' @param binarize_args Named list of arguments for `binarize_items`.
+#' @param na_action Logical; if a wave is missing, either throw error or warning.
 #' @param progress Logical; show progress in purrr::map.
 #' @param ... Additional arguments passed to `analyze_opinion_coalitions`.
 #' @return Named list of results by wave.
 #' @export
 measure_alignment_waves <- function(
     data,
-    ques_cols,
+    ques_cols = NULL,
+    ques_stem = NULL,
     group_col,
     wave_col = "year",
     waves = NULL,
     id_col = "case_id",
     weight_col = "weight",
     binarize = FALSE,
+    na_action = c("warn", "fail"),
     binarize_args = list(),
     progress = TRUE,
     ...
 ) {
+  na_action <- match.arg(na_action)
+  
   wave_col <- as.character(wave_col)
   if (!(wave_col %in% colnames(data))) {
     stop("Wave variable '", wave_col, "' not present in the supplied data")
@@ -335,6 +368,10 @@ measure_alignment_waves <- function(
   if (length(wave_values) == 0) {
     stop("No waves supplied for ", wave_col)
   }
+  
+  if (is.null(ques_cols) & is.null(ques_stem)) {
+    stop("Must supply either ques_cols or ques_stem")
+  }
 
   purrr::map(
     wave_values,
@@ -345,21 +382,27 @@ measure_alignment_waves <- function(
         df_wave <- data %>%
           filter(.data[[wave_col]] == current_wave)
         if (nrow(df_wave) == 0) {
-          stop("No data available for wave ", current_wave)
+          msg <- paste0("No data available for ", current_wave)
+          if (na_action == "fail") stop(msg)
+          else { warnings(msg); return(NULL)}
         }
-
-        available_questions <- intersect(ques_cols, colnames(df_wave))
-        if (length(available_questions) == 0) {
-          stop("None of the requested question columns exist for wave ", current_wave)
-        }
-
+        
+        ques_cols_wave <- resolve_ques(
+          data = df_wave,
+          ques_cols = ques_cols,
+          ques_stem = ques_stem,
+          exclude_cols = wave_col
+        )
+        
         ques_cols_wave <- df_wave %>%
-          select(all_of(available_questions)) %>%
+          select(all_of(ques_cols_wave)) %>%
           select(where(~!all(is.na(.)))) %>%
           colnames()
 
         if (length(ques_cols_wave) == 0) {
-          stop("No non-missing question columns for wave ", current_wave)
+          msg <- paste0("No non-missing question columns for wave ", current_wave)
+          if (na_action == "fail") stop(msg)
+          else { warnings(msg); return(NULL)}
         }
 
         if (binarize) {
@@ -370,7 +413,7 @@ measure_alignment_waves <- function(
           df_wave <- do.call(binarize_items, binarize_call)
         }
 
-        analyze_opinion_coalitions(
+        measure_alignment(
           data = df_wave,
           ques_cols = ques_cols_wave,
           group_col = group_col,
@@ -386,5 +429,7 @@ measure_alignment_waves <- function(
   ) -> results
 
   names(results) <- as.character(wave_values)
+  class(results) <- c("survalign.waves", class(results))
+  
   results
 }
