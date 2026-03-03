@@ -3,7 +3,7 @@ title: "SurvAlign Tutorial"
 output: html_document
 ---
 
-```{r preamble, echo=FALSE}
+```{r preamble, echo=FALSE, warning=FALSE, message=FALSE}
 devtools::load_all()
 ```
 
@@ -34,51 +34,45 @@ ces |>
 ```
 
 ```{r check-ces-support}
-# Temporal support
-ces |>
-  plot_support(wave_col="year", weight_col="weight", 
-               group_col="pid3", ques_stem="immig") +
-  ggtitle("Support for CES Immigration Items")
-
 # Cross-sectional support 
 ces |>
-  filter(year == 2020) |>
+  filter(year == 2024) |>
   plot_support(weight_col="weight", group_col="pid3", ques_stem="immig") +
-  ggtitle("Support for CES Core Issue Items (2020)")
+  ggtitle("Support for CES Immigration Items (2024)")
 ```
 
 ```{r check-ces-pairwise-support}
 ces |>
-  filter(pid3 == "Democrat", year == 2020) |>
+  filter(pid3 == "Democrat", year == 2024) |>
   plot_pairwise_support(ques_stem="spend")
 ces |>
-  filter(pid3 == "Democrat", year == 2020) |>
+  filter(pid3 == "Democrat", year == 2024) |>
   plot_pairwise_support(ques_stem="abort")
 ```
 
 ## Measuring Alignment
 
-```{r write-ces-ques}
+```{r write-ces-ques, echo=FALSE, results='asis'}
 cat("\n#### CES Core Policy Preference Items\n")
 ces_core_items <- colnames(ces)[grepl("(abort|immig|enviro|guns|military|trade)", colnames(ces))]
 for (item in ces_core_items) {
-  cat(paste0("\n- ", item, ": ", attr(ces[[item]], "label")))
+  cat(paste0("\n- `", item, "`: ", attr(ces[[item]], "label")))
 }
 ```
 
-```{r measure-ces-pid-alignment}
-ces20_spend_align <- ces |>
-  filter(year == 2020) |>
+```{r measure-ces-pid-alignment, warning=FALSE, message=FALSE}
+ces24_spend_align <- ces |>
+  filter(year == 2024) |>
   measure_alignment(
     ques_stem="spend",
     group_col="pid3",
     id_col="id"
   )
-ces20_spend_align |>
+ces24_spend_align |>
   plot_cumulative_support()
 ```
 
-```{r plot-ces-pid-alignment}
+```{r plot-ces-pid-alignment, warning=FALSE, message=FALSE}
 ces24_core_align <- ces |>
   filter(year == 2024) |>
   measure_alignment(
@@ -106,7 +100,7 @@ ces24_core_align |>
 
 ## Alignment with Different Missing Value Assumptions
 
-```{r ces-treat-na-as-unalign}
+```{r ces-treat-na-as-unalign, warning=FALSE, message=FALSE}
 ces24_core_align_na <- ces |>
   filter(year == 2024) |>
   measure_alignment(
@@ -122,7 +116,17 @@ ces24_core_align_na |>
 
 ## Alignment Over Time
 
-```{r ces-pid-core-aligment-over-time}
+varies considerably over time
+
+```{r check-ces-support-over-time}
+# Temporal support
+ces |>
+  plot_support(wave_col="year", weight_col="weight", 
+               group_col="pid3", ques_stem="immig") +
+  ggtitle("Support for CES Immigration Items")
+```
+
+```{r ces-pid-core-aligment-over-time, warning=FALSE, message=FALSE}
 # Measure alignment over time
 ces_pid_align <- ces |>
   measure_alignment_waves(
@@ -135,6 +139,8 @@ ces_pid_align <- ces |>
   )
 ```
 
+plot the alignment mean - nterpret it
+
 ```{r ces-alignment-mean-over-time}
 ces_pid_align |>
   plot_group_stat_over_time(
@@ -145,6 +151,7 @@ ces_pid_align |>
     group_colors = pid_colors
   )
 ```
+same story when looking at cumulative weak alignment
 
 ```{r ces-weak-alignment-over-time}
 ces_pid_align |>
@@ -159,15 +166,17 @@ ces_pid_align |>
 
 ## Alignment on Different Issue Items
 
-```{r write-ces-spend-ques}
+it may be sensitive to the choice of issue items
+
+```{r write-ces-spend-ques, echo=FALSE, results='asis'}
 cat("\n#### CES National Spending Items\n")
 ces_spending_items <- colnames(ces)[grepl("spend", colnames(ces))]
 for (item in ces_spending_items) {
-  cat(paste0("\n- ", item, ": ", attr(ces[[item]], "label")))
+  cat(paste0("\n- `", item, ": ", attr(ces[[item]], "label")))
 }
 ```
 
-```{r ces-pid-spending-aligment-over-time}
+```{r ces-pid-spending-aligment-over-time, warning=FALSE, message=FALSE}
 # Plot support
 ces |>
   plot_support(wave_col="year", weight_col="weight", 
@@ -208,7 +217,7 @@ ces_spend_align |>
 
 ## Alignment with Different Groups
 
-```{r ces-educ-align}
+```{r ces-educ-align, warning=FALSE, message=FALSE}
 ces24_race_align <- ces |>
   filter(year == 2024) |>
   measure_alignment(
@@ -234,15 +243,15 @@ gss_spending_items <- gss_cols[grepl("^nat.*_b", gss_cols)]
 gss_social_items <- gss_cols[grepl(".*_b", gss_cols) & !grepl("^nat", gss_cols)]
 ```
 
-```{r write-gss-ques}
+```{r write-gss-ques, echo=FALSE, results='asis'}
 cat("\n#### GSS National Spending Battery\n")
 for (item in gss_spending_items) {
-  cat(paste0("\n- ", item, ": ", attr(gss[[item]], "label")))
+  cat(paste0("\n- `", item, "`: ", attr(gss[[item]], "label")))
 }
 
 cat("\n#### GSS Social Battery\n")
 for (item in gss_social_items) {
-  cat(paste0("\n- ", item, ": ", attr(gss[[item]], "label")))
+  cat(paste0("\n- `", item, "`: ", attr(gss[[item]], "label")))
 }
 ```
 
@@ -268,7 +277,7 @@ table(gss_b$natcity_b)
 ```
 
 
-```{r gss-alignment-over-time}
+```{r gss-alignment-over-time, warning=FALSE, message=FALSE}
 # Measure alignment
 gss_spending_educ_align <- gss |>
   filter(year > 1972, !is.na(weight_sps)) |>
@@ -297,4 +306,87 @@ gss_spending_educ_align |>
     group_col    = "educ5",
     group_label  = "Education"
   )
+```
+
+## GSS Alignment Over Time: Groups × Items × Measures {.tabset .tabset-pills}
+
+```{r gss-multidim-setup, warning=FALSE, message=FALSE}
+# Metrics configuration
+ques_configs <- list(
+  "Spending"      = list(ques_stem = "nat.*_b"),
+  "Social Issues" = list(ques_cols = gss_social_items)
+)
+
+group_configs <- list(
+  "Party ID"  = "pid3",
+  "Education" = "educ5",
+  "Race"      = "race3"
+)
+
+weight_configs <- list(
+  "SPS Weight"  = "weight_sps",
+  "NRPS Weight" = "weight_nrps"
+)
+
+# Measure alignment waves for each combination of items × groups × weights
+gss_align_objects <- list()
+
+for (ques_label in names(ques_configs)) {
+  gss_align_objects[[ques_label]] <- list()
+  for (group_label in names(group_configs)) {
+    gss_align_objects[[ques_label]][[group_label]] <- list()
+    for (weight_label in names(weight_configs)) {
+      group_col  <- group_configs[[group_label]]
+      weight_col <- weight_configs[[weight_label]]
+
+      gss_dat <- gss |>
+        filter(year > 1972, !is.na(.data[[weight_col]]))
+
+      gss_align_objects[[ques_label]][[group_label]][[weight_label]] <-
+        do.call(
+          measure_alignment_waves,
+          c(list(gss_dat,
+                 group_col  = group_col,
+                 wave_col   = "year",
+                 id_col     = "id",
+                 weight_col = weight_col,
+                 verbose    = FALSE),
+            ques_configs[[ques_label]])
+        )
+    }
+  }
+}
+```
+
+```{r gss-multidim-tabs, results='asis', echo=FALSE, warning=FALSE, message=FALSE}
+# Estimate all metrics
+gss_tab_metrics <- c("alignment_mean", "cumulative_weak_alignment")
+
+all_lines <- character(0)
+for (ques_label in names(gss_align_objects)) {
+  all_lines <- c(all_lines,
+    sprintf("### %s {.tabset .tabset-pills}", ques_label), "")
+  for (group_label in names(gss_align_objects[[ques_label]])) {
+    group_col <- group_configs[[group_label]]
+    all_lines <- c(all_lines,
+      sprintf("#### %s {.tabset .tabset-pills}", group_label), "")
+    for (weight_label in names(gss_align_objects[[ques_label]][[group_label]])) {
+      all_lines <- c(all_lines,
+        sprintf("##### %s {.tabset .tabset-pills}", weight_label), "")
+      for (metric in gss_tab_metrics) {
+        metric_label <- stringr::str_to_title(stringr::str_replace_all(metric, "_", " "))
+        all_lines <- c(all_lines,
+          sprintf("###### %s", metric_label), "",
+          "```{r, warning=FALSE, message=FALSE, echo=FALSE}",
+          sprintf(
+            'gss_align_objects[["%s"]][["%s"]][["%s"]] |> plot_group_stat_over_time(metric = "%s", wave_col = "year", group_col = "%s", group_label = "%s")',
+            ques_label, group_label, weight_label, metric, group_col, group_label
+          ),
+          "```", "")
+      }
+    }
+  }
+}
+
+cat(knitr::knit_child(text = all_lines, quiet = TRUE))
 ```

@@ -326,10 +326,27 @@ plot_group_stat_over_time <- function(
     #facet_grid(as.formula(paste0(group_col, " ~ .")), scales = "free_y") +
     scale_size(name = "Sample Size:", guide = "none")
   
+  # Add ±2 SE ribbon when plotting alignment_mean and alignment_se is available
+  if (metric == "alignment_mean" && "alignment_se" %in% colnames(plot_data)) {
+    p <- p + geom_ribbon(
+      aes(
+        ymin = .data$alignment_mean - 2 * .data$alignment_se,
+        ymax = .data$alignment_mean + 2 * .data$alignment_se,
+        fill  = !!rlang::sym(group_col)
+      ),
+      alpha = 0.15,
+      color = NA
+    )
+  }
+  
   if (any(!is.null(group_colors))) {
-    p <- p + scale_color_manual(values = group_colors, name=paste0(group_label,":"))
+    p <- p + 
+      scale_color_manual(values = group_colors, name = paste0(group_label, ":")) +
+      scale_fill_manual(values = group_colors, name = paste0(group_label, ":"))
   } else {
-    p <- p + scale_color_discrete(name = paste0(group_label,":"))
+    p <- p + 
+      scale_color_discrete(name = paste0(group_label, ":")) +
+      scale_fill_discrete(name = paste0(group_label, ":"))
   }
   
   p <- p +
