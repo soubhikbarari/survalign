@@ -87,12 +87,8 @@ plot_cumulative_majority(align)
 their group on at least *x*% of issues — a full distribution, not just a
 single summary statistic.
 
-<img src="man/figures/README-alignment-curve-show-1.png" alt="" width="100%" />
-
 ``` r
-pid_colors <- c(Democrat = "blue", Republican = "red", `Independent/Other` = "grey")
-
-plot_alignment_curve(align, group_label = "Party ID", group_colors = pid_colors) + theme(legend.position = "top")
+plot_alignment_curve(align)
 ```
 
 <img src="man/figures/README-alignment-curve-run-1.png" alt="" width="100%" />

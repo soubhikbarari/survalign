@@ -83,11 +83,11 @@ plot_cumulative_majority(align)
 
 `plot_alignment_curve()` plots the share of group members who agree with their group on at least *x*% of issues — a full distribution, not just a single summary statistic.
 
-```{r alignment-curve-show, fig.height=4.5, fig.width=7, dpi=150, echo=FALSE}
+```{r alignment-curve-show, fig.height=4.5, fig.width=7, dpi=150, echo=TRUE, eval=FALSE}
 plot_alignment_curve(align)
 ```
 
-```{r alignment-curve-run, fig.height=4.5, fig.width=7, dpi=150, echo=TRUE, }
+```{r alignment-curve-run, fig.height=4.5, fig.width=7, dpi=150, echo=FALSE, eval=TRUE}
 pid_colors <- c(Democrat = "blue", Republican = "red", `Independent/Other` = "grey")
 
 plot_alignment_curve(align, group_label = "Party ID", group_colors = pid_colors) + theme(legend.position = "top")
