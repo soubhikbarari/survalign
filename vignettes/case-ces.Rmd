@@ -1,0 +1,289 @@
+---
+title: "Case Study: Measuring Group Alignment in the CES"
+subtitle: "A technical tutorial of `survalign` with the Cooperative Election Study"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Case Study: Measuring Group Alignment in the CES}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+<style>
+/* Details/summary toggle styling */
+details {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 8px 14px;
+  margin-bottom: 1em;
+}
+details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: #2c3e50;
+}
+details ul {
+  margin-top: 8px;
+  margin-bottom: 2px;
+}
+</style>
+
+```{r load-lib, echo=FALSE, warning=FALSE, message=FALSE}
+devtools::load_all()
+
+library(dplyr)
+library(stringr)
+library(knitr)
+
+pid_colors <- c(
+  "Democrat"="blue", 
+  "Republican"="red", 
+  "Independent/Other"="grey"
+)
+```
+
+# Case Study: Measuring Group Alignment in the Cooperative Election Study (CES)
+
+The Cooperative Election Study (CES) is a large-scale collaborative survey fielded annually around U.S. elections, with tens of thousands of respondents. It includes a rich set of policy preference items, making it well-suited for measuring intra-group alignment across political, demographic, and geographic subgroups.
+
+```{r load-ces-data}
+data(ces)
+```
+
+## Exploring the Data
+
+Before measuring alignment, it is worth inspecting which items are available across survey waves and how support is distributed across groups. `plot_coverage()` shows which items were fielded in each wave, while `plot_support()` summarizes the share of respondents supporting each item.
+
+```{r check-ces-coverage}
+ces |>
+    plot_coverage(wave_col="year", ques_stem="immig")
+
+ces |>
+    plot_coverage(wave_col="year", ques_stem="spend")
+```
+
+```{r check-ces-support}
+# Cross-sectional support 
+ces |>
+  filter(year == 2024) |>
+  plot_support(weight_col="weight", group_col="pid3", ques_stem="immig") +
+  ggtitle("Support for CES Immigration Items (2024)")
+```
+
+`plot_pairwise_support()` gives a sense of how correlated responses are across items within a group — a useful diagnostic for whether items are tapping a coherent underlying dimension.
+
+```{r check-ces-pairwise-support}
+ces |>
+  filter(pid3 == "Democrat", year == 2024) |>
+  plot_pairwise_support(ques_stem="spend")
+ces |>
+  filter(pid3 == "Democrat", year == 2024) |>
+  plot_pairwise_support(ques_stem="abort")
+```
+
+## Measuring Alignment
+
+The core items used in the alignment analysis below cover immigration, environmental policy, gun control, military spending, and trade — areas where partisan divides are typically most pronounced in the CES.
+
+```{r write-ces-ques, echo=FALSE, results='asis'}
+cat('<details>\n<summary>CES Core Policy Preference Items (click to expand)</summary>\n<ul>\n')
+ces_core_items <- colnames(ces)[grepl("(abort|immig|enviro|guns|military|trade)", colnames(ces))]
+for (item in ces_core_items) {
+  cat(paste0('<li><code>', item, '</code>: ', attr(ces[[item]], "label"), '</li>\n'))
+}
+cat('</ul>\n</details>\n\n')
+```
+
+We begin with a simpler case: measuring alignment on spending preference items alone. `plot_cumulative_majority()` shows the distribution of item-level agreement, ordered by support level — a useful first look at where consensus is strong or weak within a group.
+
+```{r measure-ces-pid-alignment, warning=FALSE, message=FALSE}
+ces24_spend_align <- ces |>
+  filter(year == 2024) |>
+  measure_alignment(
+    ques_stem="spend",
+    group_col="pid3",
+    id_col="id"
+  )
+ces24_spend_align |>
+  plot_cumulative_majority()
+```
+
+Now we turn to the broader core policy battery. `plot_group_alignment()` shows the full distribution of pairwise alignment scores across all respondent pairs within each group. The further right the distribution is shifted, the more internally cohesive the group.
+
+```{r plot-ces-pid-alignment, warning=FALSE, message=FALSE}
+ces24_core_align <- ces |>
+  filter(year == 2024) |>
+  measure_alignment(
+    ques_stem="(abort|immig|enviro|guns|military|trade)",
+    group_col="pid3",
+    id_col="id"
+  )
+ces24_core_align |>
+  plot_group_alignment(show_dists_as="histogram")
+```
+
+The alignment curve summarizes how alignment accumulates as the threshold for "agreement" increases. A group whose curve stays high across thresholds exhibits robust consensus; a curve that drops off quickly suggests only shallow or item-specific agreement.
+
+```{r plot-ces-pid-alignment-curve}
+ces24_core_align |>
+  plot_alignment_curve(group_colors=pid_colors)
+```
+
+```{r summarise-ces-pid-alignment, eval=FALSE}
+summary(ces24_core_align, format="long")
+```
+
+
+```{r summarise-ces-pid-alignment-eval, eval=TRUE, include=FALSE}
+summary(ces24_core_align, format="long") |>
+  mutate(statistic = statistic |>
+           str_replace_all("_", " ") |>
+           str_to_title() |>
+           str_replace("Se", "SE"),
+         value = round(value, digits=2)) |>
+    kable()
+```
+
+
+```{r plot-ces-pid-alignment-interactive}
+ces24_core_align |>
+    plot_alignment_curve(group_colors=pid_colors, interactive=TRUE)
+```
+
+## Alignment with Different Missing Value Assumptions
+
+By default, `measure_alignment()` excludes missing responses from the denominator. An alternative is to treat `NA` responses as explicit non-support — a more conservative assumption that increases the penalty for non-response. Under this assumption, alignment tends to fall noticeably for all groups, reflecting the substantive uncertainty that unanswered items introduce.
+
+```{r ces-treat-na-as-unalign, warning=FALSE, message=FALSE}
+ces24_core_align_na <- ces |>
+  filter(year == 2024) |>
+  measure_alignment(
+    ques_stem="(abort|immig|enviro|guns|military|trade)",
+    group_col="pid3",
+    id_col="id",
+    treat_na="unaligned"
+  )
+
+ces24_core_align_na |>
+    plot_alignment_curve(group_colors = pid_colors)
+```
+
+## Alignment Over Time
+
+Policy preferences are not static, and neither is within-group consensus. `measure_alignment_waves()` computes alignment separately for each survey wave, allowing us to track whether groups are becoming more or less internally cohesive over time.
+
+```{r check-ces-support-over-time, fig.height=10}
+# Temporal support
+ces |>
+  plot_support(wave_col="year", weight_col="weight", 
+               group_col="pid3", ques_stem="immig") +
+  ggtitle("Support for CES Immigration Items")
+```
+
+```{r ces-pid-core-aligment-over-time, warning=FALSE, message=FALSE}
+# Measure alignment over time
+ces_pid_align <- ces |>
+  measure_alignment_waves(
+    ques_stem="(abort|immig|enviro|guns|military|trade)",
+    group_col  = "pid3",
+    wave_col   = "year",
+    id_col     = "id",
+    weight_col = "weight",
+    verbose    = FALSE
+  )
+```
+
+The alignment mean summarizes, on average, what share of a group's members agree on each policy item. Higher values reflect greater internal consensus. Examining this metric over time reveals whether partisan sorting on core policy dimensions is intensifying, stabilizing, or reversing.
+
+```{r ces-alignment-mean-over-time}
+ces_pid_align |>
+  plot_group_stat_over_time(
+    metric       = "alignment_mean",
+    wave_col     = "year",
+    group_col    = "pid3",
+    group_label  = "Party ID",
+    group_colors = pid_colors
+  )
+```
+
+Cumulative weak alignment is a more lenient threshold: it counts the share of items on which at least a bare majority of group members agree. This metric is less sensitive to the handful of items where near-unanimous consensus exists, and captures whether a group agrees directionally across most issues — even if not overwhelmingly so.
+
+```{r ces-weak-alignment-over-time}
+ces_pid_align |>
+  plot_group_stat_over_time(
+    metric       = "cumulative_weak_alignment",
+    wave_col     = "year",
+    group_col    = "pid3",
+    group_label  = "Party ID",
+    group_colors = pid_colors
+  )
+```
+
+## Alignment on Different Issue Baskets
+
+Alignment scores can be sensitive to the choice of issue baskets. The core policy items above (immigration, guns, environment, etc.) may capture different dimensions of consensus than, say, spending preferences. The spending battery asks respondents to trade off government spending levels across policy domains, which may produce different alignment patterns than direct policy support questions.
+
+```{r write-ces-spend-ques, echo=FALSE, results='asis'}
+cat('<details>\n<summary>CES National Spending Items (click to expand)</summary>\n<ul>\n')
+ces_spending_items <- colnames(ces)[grepl("spend", colnames(ces))]
+for (item in ces_spending_items) {
+  cat(paste0('<li><code>', item, '</code>: ', attr(ces[[item]], "label"), '</li>\n'))
+}
+cat('</ul>\n</details>\n\n')
+```
+
+```{r ces-pid-spending-aligment-over-time, warning=FALSE, message=FALSE}
+# Plot support
+ces |>
+  plot_support(wave_col="year", weight_col="weight", 
+               group_col="pid3", ques_stem="spend") +
+  ggtitle("Support for CES Spending Items")
+
+# Measure alignment
+ces_spend_align <- ces |>
+  measure_alignment_waves(
+    ques_stem  = "spend",
+    group_col  = "pid3",
+    wave_col   = "year",
+    id_col     = "id",
+    weight_col = "weight",
+    verbose    = FALSE
+  )
+
+# Plot alignment means
+ces_spend_align |>
+  plot_group_stat_over_time(
+    metric       = "alignment_mean",
+    wave_col     = "year",
+    group_col    = "pid3",
+    group_label  = "Party ID",
+    group_colors = pid_colors
+  )
+
+# Plot cumulative weak alignment
+ces_spend_align |>
+  plot_group_stat_over_time(
+    metric       = "cumulative_weak_alignment",
+    wave_col     = "year",
+    group_col    = "pid3",
+    group_label  = "Party ID",
+    group_colors = pid_colors
+  )
+```
+
+## Alignment within Different Groups
+
+Party ID is a natural grouping variable for studying policy alignment, but `survalign` works with any categorical grouping. Here we examine alignment on core policy items by racial/ethnic group, where the patterns of internal consensus may differ substantially from the partisan case.
+
+```{r ces-educ-align, warning=FALSE, message=FALSE}
+ces24_race_align <- ces |>
+  filter(year == 2024) |>
+  measure_alignment(
+    ques_stem="(abort|immig|enviro|guns|military|trade)",
+    group_col="race5",
+    id_col="id"
+  )
+
+ces24_race_align |>
+  plot_alignment_curve()
+```
