@@ -18,6 +18,10 @@ knitr::opts_chunk$set(
 # survalign <img src="man/figures/logo.png" align="right" height="139" />
 
 <!-- badges: start -->
+[![R-CMD-check](https://github.com/soubhikbarari/survalign/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/soubhikbarari/survalign/actions/workflows/R-CMD-check.yaml)
+[![test coverage](https://codecov.io/gh/soubhikbarari/survalign/branch/main/graph/badge.svg)](https://app.codecov.io/gh/soubhikbarari/survalign?branch=main)
+[![version](https://img.shields.io/github/r-package/v/soubhikbarari/survalign)](https://github.com/soubhikbarari/survalign/blob/main/DESCRIPTION)
+[![Lifecycle: experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
 **Democracy doesn't work one issue at a time.**
@@ -27,6 +31,8 @@ knitr::opts_chunk$set(
 Traditional issue-by-issue polling can make fractured coalitions look cohesive. A group may show 60% support on each of five issues separately, yet only 10% of its members agree on all five at once. survalign quantifies this gap with a suite of alignment metrics.
 
 ## Key Metrics
+
+Each metric captures a different facet of how cohesive a group is across its full issue basket.
 
 | Metric | Question it answers |
 |---|---|
@@ -46,6 +52,8 @@ pak::pak("soubhikbarari/survalign")
 ```
 
 ## Quick Example
+
+Call `measure_alignment()` with a data frame, a regex matching your question columns, and a grouping variable — it returns a `survalign` object containing per-respondent scores, group-level statistics, and everything needed for plotting.
 
 ```{r example}
 library(survalign)
@@ -67,13 +75,13 @@ align <- ces |>
 
 ## Visualize Alignment
 
+`plot_cumulative_majority()` shows per-item and cumulative plurality support side by side, making it easy to see where joint-issue agreement breaks down even when individual-issue support looks high.
+
 ```{r cumulative-support, fig.height=7.5, fig.width=7, dpi=150}
 plot_cumulative_majority(align)
 ```
 
-```{r alignment-curve, echo=TRUE, eval=FALSE}
-plot_alignment_curve(align, interactive = TRUE)
-```
+`plot_alignment_curve()` plots the share of group members who agree with their group on at least *x*% of issues — a full distribution, not just a single summary statistic.
 
 ```{r alignment-curve, fig.height=4.5, fig.width=7, dpi=150, echo=FALSE}
 pid_colors <- c(Democrat = "blue", Republican = "red", `Independent/Other` = "grey")
@@ -81,7 +89,9 @@ pid_colors <- c(Democrat = "blue", Republican = "red", `Independent/Other` = "gr
 plot_alignment_curve(align, group_colors = pid_colors, interactive = TRUE)
 ```
 
-## Track Cumulative Alignment Over Time
+## Track Alignment Over Time
+
+`measure_alignment_waves()` wraps `measure_alignment()` across survey waves so you can track how group cohesion has shifted over time.
 
 ```{r over-time, fig.height=4, fig.width=7, dpi=150}
 ces_align_waves <- ces |>
@@ -105,6 +115,8 @@ plot_group_stat_over_time(
 ```
 
 ## Learn More
+
+Full documentation and worked case studies are available on the [package website](https://soubhikbarari.github.io/survalign/).
 
 - [Understanding Group Alignment](https://soubhikbarari.github.io/survalign/articles/survalign.html) — conceptual explainer with toy data
 - [CES Case Study](https://soubhikbarari.github.io/survalign/articles/case-ces.html) — partisan alignment in the Cooperative Election Study
