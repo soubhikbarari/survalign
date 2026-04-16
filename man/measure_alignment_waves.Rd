@@ -37,11 +37,11 @@ measure_alignment_waves(
 
 \item{weight_col}{Optional weight column name.}
 
-\item{binarize}{Logical; apply \code{binarize_items} before analysis.}
+\item{binarize}{Logical; apply \code{binarize_responses()} before analysis.}
 
 \item{na_action}{Logical; if a wave is missing, either throw error or warning.}
 
-\item{binarize_args}{Named list of arguments for \code{binarize_items}.}
+\item{binarize_args}{Named list of arguments for \code{binarize_responses()}.}
 
 \item{progress}{Logical; show progress in purrr::map.}
 
