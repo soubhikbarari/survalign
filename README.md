@@ -99,27 +99,16 @@ plot_alignment_curve(align)
 waves so you can track how group cohesion has shifted over time.
 
 ``` r
-ces_align_waves <- ces |>
+ces |>
   measure_alignment_waves(
     ques_stem  = "(abort|immig|enviro|guns|military|trade)",
-    group_col  = "pid3",
-    wave_col   = "year",
-    id_col     = "id",
-    weight_col = "weight",
-    verbose    = FALSE
+  ) |>
+  plot_group_stat_over_time(
+    metric = "cumulative_weak_alignment",
   )
-
-plot_group_stat_over_time(
-  ces_align_waves,
-  metric       = "cumulative_weak_alignment",
-  wave_col     = "year",
-  group_col    = "pid3",
-  group_label  = "Party ID",
-  group_colors = pid_colors
-)
 ```
 
-<img src="man/figures/README-over-time-1.png" alt="" width="100%" />
+<img src="man/figures/README-over-time-run-1.png" alt="" width="100%" />
 
 ## Learn More
 

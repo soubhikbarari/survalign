@@ -83,7 +83,7 @@ plot_cumulative_majority(align)
 
 `plot_alignment_curve()` plots the share of group members who agree with their group on at least *x*% of issues — a full distribution, not just a single summary statistic.
 
-```{r alignment-curve-show, fig.height=4.5, fig.width=7, dpi=150, echo=TRUE, eval=FALSE}
+```{r alignment-curve-show, echo=TRUE, eval=FALSE}
 plot_alignment_curve(align)
 ```
 
@@ -97,7 +97,17 @@ plot_alignment_curve(align, group_label = "Party ID", group_colors = pid_colors)
 
 `measure_alignment_waves()` wraps `measure_alignment()` across survey waves so you can track how group cohesion has shifted over time.
 
-```{r over-time, fig.height=4, fig.width=7, dpi=150}
+```{r over-time-show, echo=TRUE, eval=FALSE}
+ces |>
+  measure_alignment_waves(
+    ques_stem  = "(abort|immig|enviro|guns|military|trade)",
+  ) |>
+  plot_group_stat_over_time(
+    metric = "cumulative_weak_alignment",
+  )
+```
+
+```{r over-time-run, fig.height=4, fig.width=7, dpi=150, echo=FALSE, eval=TRUE}
 ces_align_waves <- ces |>
   measure_alignment_waves(
     ques_stem  = "(abort|immig|enviro|guns|military|trade)",
