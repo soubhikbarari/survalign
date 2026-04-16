@@ -11,7 +11,7 @@ measure_alignment_waves(
   group_col,
   wave_col = "year",
   waves = NULL,
-  id_col = "case_id",
+  id_col = NULL,
   weight_col = "weight",
   binarize = FALSE,
   na_action = c("warn", "fail"),

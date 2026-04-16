@@ -1,3 +1,18 @@
+#' Design-weighted standard error of the mean (internal)
+#'
+#' Uses the Kish effective sample size approximation:
+#'   n_eff = (sum w)^2 / sum(w^2)
+#' so SE = sd_w / sqrt(n_eff), where sd_w is the weighted standard deviation.
+weighted_se <- function(x, w) {
+  keep <- !is.na(x) & !is.na(w)
+  x <- x[keep]; w <- w[keep]
+  if (length(x) == 0) return(NA_real_)
+  xbar <- weighted.mean(x, w = w)
+  sd_w <- sqrt(weighted.mean((x - xbar)^2, w = w))
+  n_eff <- sum(w)^2 / sum(w^2)
+  sd_w / sqrt(n_eff)
+}
+
 #' Resolve columns corresponding to questions (internal)
 resolve_ques <- function(data, ques_cols = NULL, ques_stem = NULL, exclude_cols = NULL) {
   if (!is.null(ques_cols)) {
@@ -50,7 +65,7 @@ dump_labels <- function(data, attr = c("label", "shortlabel"), file = NULL) {
       NA
     }
     data.frame(var = col, label = label)
-  }) %>%
+  }) |>
     bind_rows()
   if (!is.null(file) && !is.na(file)) {
     write.csv(info, file = file, row.names = FALSE)
@@ -87,7 +102,7 @@ binarize_responses <- function(data, ques_cols = NULL, ques_stem = NULL, thresho
     ques_cols <- ques_cols[ques_cols %in% colnames(data)]
   }
 
-  out <- data %>%
+  out <- data |>
     mutate(across(all_of(ques_cols), ~ {
       if (!all(is.null(na_values))) {
         .[. %in% na_values] <- NA
@@ -142,15 +157,15 @@ plot_coverage <- function(
     exclude_cols = wave_col
   )
 
-  coverage <- data %>%
-    select(all_of(c(wave_col, ques_cols))) %>%
-    group_by(.data[[wave_col]]) %>%
+  coverage <- data |>
+    select(all_of(c(wave_col, ques_cols))) |>
+    group_by(.data[[wave_col]]) |>
     summarise(across(all_of(ques_cols), ~mean(is.na(.x))), .groups = "drop")
 
-  p <- coverage %>%
-    pivot_longer(cols = -all_of(wave_col), names_to = "variable", values_to = "pct_missing") %>%
-    filter(pct_missing != 1) %>%
-    mutate(variable = str_to_kebab(variable)) %>%
+  p <- coverage |>
+    pivot_longer(cols = -all_of(wave_col), names_to = "variable", values_to = "pct_missing") |>
+    filter(pct_missing != 1) |>
+    mutate(variable = str_to_kebab(variable)) |>
     ggplot(aes(y = variable, x = .data[[wave_col]], fill = 100*pct_missing)) +
     geom_tile(color = "white")
   
@@ -192,7 +207,7 @@ plot_support <- function(
   ques_stem = NULL,
   show_labels = TRUE
 ) {
-  data_clean <- data %>% select(-matches("_orig"))
+  data_clean <- data |> select(-matches("_orig"))
   use_wave <- !is.null(wave_col)
   wave_col <- if (use_wave) as.character(wave_col)[1] else NULL
   weight_col <- as.character(weight_col)[1]
@@ -227,16 +242,16 @@ plot_support <- function(
 
   facet_by <- match.arg(facet_by)
 
-  coverage <- data_clean %>%
-    select(all_of(c(group_by_cols, weight_col, ques_cols))) %>%
-    group_by_at(group_by_cols) %>%
+  coverage <- data_clean |>
+    select(all_of(c(group_by_cols, weight_col, ques_cols))) |>
+    group_by_at(group_by_cols) |>
     summarise(across(all_of(ques_cols), ~100*weighted.mean(as.numeric(.x) == top_vals[[cur_column()]], w = .data[[weight_col]], na.rm = TRUE)), .groups = "drop")
 
-  coverage_long <- coverage %>%
-    pivot_longer(cols = -any_of(c(group_by_cols, weight_col)), names_to = "variable", values_to = "pct_support") %>%
-    filter(!is.na(pct_support)) %>%
-    rename_at(vars(all_of(group_col)), ~"group_col") %>%
-    filter(!is.na(group_col)) %>%
+  coverage_long <- coverage |>
+    pivot_longer(cols = -any_of(c(group_by_cols, weight_col)), names_to = "variable", values_to = "pct_support") |>
+    filter(!is.na(pct_support)) |>
+    rename_at(vars(all_of(group_col)), ~"group_col") |>
+    filter(!is.na(group_col)) |>
     mutate(variable = stringr::str_to_kebab(variable))
 
   if (!use_wave) {
@@ -245,7 +260,7 @@ plot_support <- function(
       warning("More than 10 variables to plot; bar plot may be hard to read.")
     }
     if (facet_by == "variable") {
-      p <- coverage_long %>%
+      p <- coverage_long |>
         ggplot(aes(x = pct_support, y = group_col)) +
         geom_bar(stat = "identity", fill = "steelblue")
       if (show_labels) {
@@ -259,7 +274,7 @@ plot_support <- function(
         labs(y = NULL) +
         theme(strip.text.y.right = element_text(angle = 0))
     } else {
-      p <- coverage_long %>%
+      p <- coverage_long |>
         ggplot(aes(x = pct_support, y = variable)) +
         geom_bar(stat = "identity", fill = "steelblue")
       if (show_labels) {
@@ -279,7 +294,7 @@ plot_support <- function(
       warning("More than 10 variables to plot; heatmap may be hard to read.")
     }
     if (facet_by == "variable") {
-      p <- coverage_long %>%
+      p <- coverage_long |>
         ggplot(aes(y = group_col, x = .data[[wave_col]], fill = pct_support)) +
         geom_tile(color = "white")
       if (show_labels) {
@@ -295,7 +310,7 @@ plot_support <- function(
         theme(legend.position = "top",
               strip.text.y.right = element_text(angle = 0))
     } else {
-      p <- coverage_long %>%
+      p <- coverage_long |>
         ggplot(aes(y = variable, x = .data[[wave_col]], fill = pct_support)) +
         geom_tile(color = "white")
       if (show_labels) {
@@ -369,7 +384,7 @@ measure_pairwise_support <- function(
     combs <- c(combs, purrr::map(ques_cols, ~c(.x, .x)))
   }
 
-  data_use <- data %>%
+  data_use <- data |>
     select(all_of(c(ques_cols, weight_col)))
 
   purrr::map_dfr(combs, function(pair) {
@@ -377,7 +392,7 @@ measure_pairwise_support <- function(
     q2 <- pair[2]
 
     if (treat_na == "exclude") {
-      df_pair <- data_use %>%
+      df_pair <- data_use |>
         filter(!is.na(.data[[q1]]) & !is.na(.data[[q2]]))
       
       if (nrow(df_pair) == 0) {
@@ -455,15 +470,15 @@ plot_pairwise_support <- function(
     )
   }
 
-  plot_data <- results %>%
-    filter(!is.na(percent_both_support)) %>%
+  plot_data <- results |>
+    filter(!is.na(percent_both_support)) |>
     mutate(
       q1 = stringr::str_to_kebab(q1),
       q2 = stringr::str_to_kebab(q2),
       pct = percent_both_support * 100
     )
 
-  p <- plot_data %>%
+  p <- plot_data |>
     ggplot(aes(x = q1, y = q2, fill = pct)) +
     geom_tile(color = "grey") +
     scale_x_discrete(name = "") +

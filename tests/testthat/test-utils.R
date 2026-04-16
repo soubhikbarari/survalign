@@ -41,17 +41,17 @@ test_that("plot_support returns a ggplot", {
 
 test_that("binarize_responses returns 0/1 values", {
   data <- build_test_data()
-  out <- binarize_responses(data, ques_cols = c("q1", "q2"), prop_cutpoint = 0.5)
+  out <- binarize_responses(data, ques_cols = c("q1", "q2"), threshold = 0.5)
   expect_true(all(out$q1 %in% c(0, 1, NA)))
   expect_true(all(out$q2 %in% c(0, 1, NA)))
 })
 
 test_that("binarize_responses returns 0/1 values on GSS data (factors)", {
-  out <- binarize_responses(gss, ques_cols = c("natarms"), prop_cutpoint = 0.3)
+  out <- binarize_responses(gss, ques_cols = c("natarms"), threshold = 0.3)
   expect_true(all(out$natarms %in% c(0, 1, NA)))
   expect_true(mean(out$natarms, na.rm=T) > 0.66)
   
-  out <- binarize_responses(gss, ques_cols = c("natarms"), prop_cutpoint = 0.6)
+  out <- binarize_responses(gss, ques_cols = c("natarms"), threshold = 0.6)
   expect_true(mean(out$natarms, na.rm=T) < 0.33)
 })
 

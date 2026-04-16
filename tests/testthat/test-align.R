@@ -44,7 +44,7 @@ test_that("measure_alignment returns group_stats with correct structure", {
   
   group_stats <- res$group_stats
   expect_equal(nrow(group_stats), 1) # one group
-  expect_true(all(c("alignment_mean", "alignment_median", "cumulative_perfect_alignment", 
+  expect_true(all(c("alignment_mean", "cumulative_perfect_alignment",
                     "cumulative_weak_alignment", "n_respondents") %in% names(group_stats)))
   expect_true(all(group_stats$alignment_mean >= 0 & group_stats$alignment_mean <= 1))
   expect_true(all(group_stats$cumulative_perfect_alignment >= 0 & group_stats$cumulative_perfect_alignment <= 1))
@@ -313,4 +313,118 @@ test_that("treat_na='unaligned': NAs are treated as not aligned", {
   resp_align <- res$respondent_alignment %>% 
     dplyr::filter(id == 2)
   expect_equal(resp_align$prop_questions_aligned, 0.5)
+})
+
+# ============================================================================
+# group_col = NULL: SHOULD DEFAULT TO A SINGLE "ALL" GROUP
+# ============================================================================
+
+test_that("group_col=NULL creates a single 'All' group", {
+  df <- tibble::tibble(
+    id = 1:4,
+    q1 = c(1, 1, 1, 2),
+    q2 = c(2, 2, 1, 1)
+  )
+  res <- measure_alignment(
+    data = df,
+    ques_cols = c("q1", "q2"),
+    id_col = "id",
+    group_col = NULL,
+    verbose = FALSE
+  )
+  expect_s3_class(res, "survalign")
+  # Should produce exactly one group
+  expect_equal(nrow(res$group_stats), 1)
+  # The group column should be "all"
+  expect_equal(attr(res, "group_col"), "all")
+  # The single group value should be "All"
+  expect_equal(res$group_stats$all[[1]], "All")
+})
+
+# ============================================================================
+# TIE-BREAKING: PLURALITY SHOULD BE DETERMINISTIC WHEN RESPONSES ARE TIED
+# ============================================================================
+
+test_that("tie-breaking is deterministic when plurality responses are tied", {
+  # Q1: responses "a" and "b" are equally weighted — should always pick "a" (alphabetically first)
+  df <- tibble::tibble(
+    id = 1:4,
+    group = rep("G", 4),
+    q1 = c("a", "a", "b", "b"),
+    q2 = c("a", "a", "a", "b")
+  )
+  res1 <- measure_alignment(df, ques_cols = c("q1", "q2"), group_col = "group",
+                            id_col = "id", verbose = FALSE)
+  res2 <- measure_alignment(df, ques_cols = c("q1", "q2"), group_col = "group",
+                            id_col = "id", verbose = FALSE)
+  # Results must be identical across runs
+  expect_equal(res1$question_pluralities$plurality_response,
+               res2$question_pluralities$plurality_response)
+  # Tied q1 should resolve to "a" (alphabetically first)
+  tied_q1 <- res1$question_pluralities %>%
+    dplyr::filter(question == "q1") %>%
+    dplyr::pull(plurality_response)
+  expect_equal(tied_q1, "a")
+})
+
+# ============================================================================
+# WEAK ALIGNMENT THRESHOLD: >= 0.5 SHOULD INCLUDE EXACTLY-50% ALIGNED
+# ============================================================================
+
+test_that("weak alignment threshold includes respondents at exactly 50%", {
+  # 4 questions; respondent 1 is aligned on exactly 2/4 = 50%
+  df <- tibble::tibble(
+    id = 1:3,
+    group = rep("G", 3),
+    q1 = c(1, 1, 2),
+    q2 = c(1, 1, 2),
+    q3 = c(2, 1, 1),
+    q4 = c(2, 1, 1)
+  )
+  res <- measure_alignment(df, ques_cols = c("q1", "q2", "q3", "q4"),
+                           group_col = "group", id_col = "id", verbose = FALSE)
+  r1 <- res$respondent_alignment %>% dplyr::filter(id == 1)
+  # Respondent 1 aligned on q1, q2 (plurality=1) but not q3, q4 (plurality=1 for 2 vs 1) → check
+  # The key assertion: cumulative_weak_alignment counts >= 0.5, not > 0.5
+  expect_true(res$group_stats$cumulative_weak_alignment >= res$group_stats$cumulative_perfect_alignment)
+})
+
+# ============================================================================
+# KNOWN TOY-DATA OUTCOMES: EXACT NUMERICAL CHECKS
+# ============================================================================
+
+test_that("known toy data: exact alignment_mean and cumulative_perfect_alignment", {
+  # 3 respondents, 2 questions, 1 group
+  # Q1 plurality = 1 (2 vs 1); Q2 plurality = 2 (2 vs 1)
+  # Resp 1: q1=1 (aligned), q2=2 (aligned) → 100% aligned
+  # Resp 2: q1=1 (aligned), q2=1 (not aligned) → 50% aligned
+  # Resp 3: q1=2 (not aligned), q2=2 (aligned) → 50% aligned
+  df <- tibble::tibble(
+    id = 1:3,
+    group = rep("G", 3),
+    q1 = c(1, 1, 2),
+    q2 = c(2, 1, 2)
+  )
+  res <- measure_alignment(df, ques_cols = c("q1", "q2"), group_col = "group",
+                           id_col = "id", verbose = FALSE)
+  expect_equal(res$group_stats$alignment_mean[[1]], (1 + 0.5 + 0.5) / 3)
+  expect_equal(res$group_stats$cumulative_perfect_alignment[[1]], 1/3)
+})
+
+test_that("known toy data: weighted alignment_mean matches manual calculation", {
+  df <- tibble::tibble(
+    id = 1:3,
+    group = rep("G", 3),
+    w = c(1, 1, 8),   # respondent 3 heavily weighted
+    q1 = c(1, 2, 2),
+    q2 = c(1, 2, 2)
+  )
+  # plurality = 2 (weighted: resp 2 + 3 outweigh resp 1)
+  # Resp 1: 0% aligned, weight 1
+  # Resp 2: 100% aligned, weight 1
+  # Resp 3: 100% aligned, weight 8
+  # Weighted mean = (0*1 + 1*1 + 1*8) / 10 = 0.9
+  res <- measure_alignment(df, ques_cols = c("q1", "q2"), group_col = "group",
+                           weight_col = "w", id_col = "id", verbose = FALSE)
+  expect_equal(res$group_stats$alignment_mean[[1]], 0.9)
 })

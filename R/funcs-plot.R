@@ -1,49 +1,51 @@
 
 
-#' Plot cumulative issue support by group
-#' 
-#' For each group, plot support for items in descending order,
-#' overlaying single item support vs. cumulative support.
+#' Plot cumulative issue majority vs individual issue majority by group
+#'
+#' For each group, plot support for items in descending order of individual
+#' issue majority, overlaying the individual issue majority vs. the cumulative
+#' issue majority (proportion supporting the majority on all issues up to and
+#' including rank k).
 #'
 #' @param results Output from `measure_alignment()`.
 #' @param show_response_value Logical; show response values in labels.
 #' @param majority_cutoff Logical; trim items that fall below majority cumulative support in each group.
 #' @return ggplot object.
 #' @export
-plot_cumulative_support <- function(
+plot_cumulative_majority <- function(
     results,
     show_response_value = TRUE,
     majority_cutoff = FALSE
 ) {
-  dat <- results$question_cumulative_pluralities %>%
-    rename_at(attr(results, "group_col"), ~"group_col") %>%
-    mutate(group_col = str_to_title(group_col)) %>%
-    arrange(group_col, desc(prop_cumulative_plurality)) %>%
-    group_by(group_col) %>%
+  dat <- results$question_cumulative_pluralities |>
+    rename_at(attr(results, "group_col"), ~"group_col") |>
+    mutate(group_col = str_to_title(group_col)) |>
+    arrange(group_col, desc(prop_cumulative_plurality)) |>
+    group_by(group_col) |>
     # keep all items where alignment except for first without alignment
-    mutate(row_id = row_number()) %>%
+    mutate(row_id = row_number()) |>
     mutate(keep = case_when(
       !majority_cutoff ~ TRUE,
       majority_cutoff & prop_cumulative_plurality >= 0.5 ~ TRUE, 
       majority_cutoff & prop_cumulative_plurality < 0.5 ~ FALSE,
       .default = TRUE
-    )) %>%
-    mutate(first_below = if_else(!keep & suppressWarnings(row_id == min(row_id[!keep])), TRUE, FALSE)) %>%
-    filter(keep | first_below) %>%
-    select(-keep, -first_below, -row_id) %>%
-    ungroup() %>%
+    )) |>
+    mutate(first_below = if_else(!keep & suppressWarnings(row_id == min(row_id[!keep])), TRUE, FALSE)) |>
+    filter(keep | first_below) |>
+    select(-keep, -first_below, -row_id) |>
+    ungroup() |>
     # prep for plot
-    mutate(question = tolower(gsub("\\_", "-", question))) %>%
+    mutate(question = tolower(gsub("\\_", "-", question))) |>
     mutate(label = paste(question, plurality_response, sep = ": "))
-  dat <- dat %>%
+  dat <- dat |>
     mutate(
       label = paste(question, plurality_response, sep = ": "),
       group_label = interaction(group_col, label, drop = TRUE, sep = "."),
       group_label = factor(
         group_label,
-        levels = dat %>%
-          arrange(group_col, (prop_cumulative_plurality)) %>%
-          mutate(group_label = interaction(group_col, paste(question, plurality_response, sep = ": "))) %>%
+        levels = dat |>
+          arrange(group_col, (prop_cumulative_plurality)) |>
+          mutate(group_label = interaction(group_col, paste(question, plurality_response, sep = ": "))) |>
           pull(group_label)
       )
     )
@@ -85,14 +87,14 @@ plot_group_alignment <- function(
     ci_scale = 1.96
 ) {
   show_dists_as <- match.arg(show_dists_as)
-  data <- results$respondent_alignment %>% 
-    filter_at(attr(results, "group_col"), ~!(.x %in% exclude_vals)) %>%
-    rename_at(attr(results, "group_col"), ~"g") %>%
-    group_by(g) %>%
-    mutate(val_label = g) %>%
-    # mutate(val_label = paste0(trimws(g, whitespace = "[ \t\r\n“”]"),"\n(n=",n(),")")) %>%
+  data <- results$respondent_alignment |> 
+    filter_at(attr(results, "group_col"), ~!(.x %in% exclude_vals)) |>
+    rename_at(attr(results, "group_col"), ~"g") |>
+    group_by(g) |>
+    mutate(val_label = g) |>
+    # mutate(val_label = paste0(trimws(g, whitespace = "[ \t\r\n“”]"),"\n(n=",n(),")")) |>
     ungroup()
-  plot <- data %>%
+  plot <- data |>
     ggplot(aes(x = prop_questions_aligned)) +
     scale_y_continuous(name = "") +
     scale_x_continuous(labels = scales::percent_format(1), 
@@ -111,8 +113,8 @@ plot_group_alignment <- function(
   
   if (show_mean) {
     plot <- plot +
-      geom_pointrange(data = data %>%
-                        group_by(g, val_label) %>%
+      geom_pointrange(data = data |>
+                        group_by(g, val_label) |>
                         summarise(mean_prop = mean(prop_questions_aligned, na.rm=T),
                                   se_prop = sd(prop_questions_aligned, na.rm=T)/sqrt(n()),
                                   ci_upr = mean_prop + ci_scale*se_prop,
@@ -153,26 +155,26 @@ plot_alignment_curve <- function(
     interactive = FALSE
 ) {
   binarized <- !all(is.null(attr(results, "binarized_cols")))
-  cumul_align <- resolution %>%
-    map(~results$respondent_alignment %>%
-          filter_at(attr(results, "group_col"), ~!(.x %in% exclude_vals)) %>%
-          group_by_at(attr(results, "group_col")) %>%
+  cumul_align <- resolution |>
+    map(~results$respondent_alignment |>
+          filter_at(attr(results, "group_col"), ~!(.x %in% exclude_vals)) |>
+          group_by_at(attr(results, "group_col")) |>
           summarise(q = .x,
                     p = mean(prop_questions_aligned >= .x, na.rm=T),
                     n = n(),
-                    .groups = "drop")) %>%
-    bind_rows() %>%
-    mutate(val_label = as.character(.[[attr(results, "group_col")]]))
+                    .groups = "drop")) |>
+    bind_rows() |>
+    mutate(val_label = as.character(.data[[attr(results, "group_col")]]))
 
-  cumul_align <- cumul_align %>%
+  cumul_align <- cumul_align |>
     bind_rows(
-      cumul_align %>%
-        group_by_at(attr(results, "group_col")) %>%
+      cumul_align |>
+        group_by_at(attr(results, "group_col")) |>
         summarise(q = 1, p = 0, n = first(n), val_label = first(val_label), .groups = "drop")
     )
 
-  plot_data <- cumul_align %>%
-    distinct_at(c(attr(results, "group_col"), "p"), .keep_all = TRUE) %>%
+  plot_data <- cumul_align |>
+    distinct_at(c(attr(results, "group_col"), "p"), .keep_all = TRUE) |>
     mutate(
       tooltip = sprintf(
         "<b>%s%%</b> of %s respondents\nagree with the %s majority\non <b>%s%% or more</b> of issues",
@@ -180,13 +182,15 @@ plot_alignment_curve <- function(
       )
     )
 
-  p <- plot_data %>%
-    ggplot(aes(y = q, x = p,
+  # x = alignment threshold (q); y = share of respondents meeting that threshold (p)
+  p <- plot_data |>
+    ggplot(aes(x = q, y = p,
                color = val_label,
                group = val_label,
                shape = val_label,
                linetype = val_label,
                text = tooltip)) +
+    geom_point() +
     geom_line(linewidth = 1) +
     geom_vline(xintercept = 0.5, alpha = 0.5) +
     geom_hline(yintercept = 0.5, alpha = 0.5)
@@ -202,33 +206,27 @@ plot_alignment_curve <- function(
       values = c("solid", "dotted", "dotdash", "longdash", "twodash", "dashdot"),
       name = paste0(group_label, ":")
     ) +
-    scale_y_continuous(
-      label = scales::percent_format(1),
-      limits = c(0, 1),
-      name = "who support % (or more) group majority positions"
-    ) +
     scale_x_continuous(
       label = scales::percent_format(1),
       limits = c(0, 1),
+      name = "...who support % (or more) of group majority positions"
+      # name = "Alignment threshold: % (or more) of group majority positions supported"
+    ) +
+    scale_y_continuous(
+      label = scales::percent_format(1),
+      limits = c(0, 1),
       name = "% of respondents..."
+      # name = "% of respondents meeting threshold"
     ) +
     theme_bw()
 
   if (interactive) {
     if (!requireNamespace("plotly", quietly = TRUE)) {
-      message(
-        paste0(
-          "Package 'plotly' is required for interactive = TRUE. ",
-          "Install now?"
-        )
+      stop(
+        "Package 'plotly' is required for interactive = TRUE. ",
+        "Install it with: install.packages(\"plotly\")",
+        call. = FALSE
       )
-      . <- readline("\n\nY: yes\nN: no\n")
-      if (startsWith(tolower(.), "y")) {
-        install.packages("plotly")
-      } else {
-        message("Installation skipped.")
-        return(NULL)
-      }
     }
     p <- p + theme(legend.position = "bottom")
     return(plotly::ggplotly(p, tooltip = "text"))
@@ -269,8 +267,8 @@ plot_group_stat_over_time <- function(
     if (!is.list(result) || is.null(result$group_stats)) return(NULL)
     result_group_col <- attr(result, "group_col")
     if (is.null(result_group_col) || !(result_group_col %in% colnames(result$group_stats))) return(NULL)
-    result$group_stats %>%
-      dplyr::rename(!!rlang::sym(group_col) := !!rlang::sym(result_group_col)) %>%
+    result$group_stats |>
+      dplyr::rename(!!rlang::sym(group_col) := !!rlang::sym(result_group_col)) |>
       dplyr::mutate(!!rlang::sym(wave_col) := period_label)
   })
   
@@ -310,12 +308,12 @@ plot_group_stat_over_time <- function(
   plot_data <- group_stats_t
   # if (!is.null(yrs)) {
   #   if (year_col %in% colnames(plot_data)) {
-  #     plot_data <- plot_data %>% filter(!!rlang::sym(year_col) %in% yrs)
+  #     plot_data <- plot_data |> filter(!!rlang::sym(year_col) %in% yrs)
   #   }
   # }
   
   # Convert wave for plotting (if possible)
-  plot_data <- plot_data %>% mutate(!!rlang::sym(wave_col) := as.numeric(!!rlang::sym(wave_col)))
+  plot_data <- plot_data |> mutate(!!rlang::sym(wave_col) := as.numeric(!!rlang::sym(wave_col)))
   
   p <- ggplot(plot_data, aes(x = !!rlang::sym(wave_col), y = !!rlang::sym(metric), color = !!rlang::sym(group_col), group = !!rlang::sym(group_col))) +
     geom_point(aes(size = .data$n_respondents)) +
