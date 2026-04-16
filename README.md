@@ -6,8 +6,7 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/soubhikbarari/survalign/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/soubhikbarari/survalign/actions/workflows/R-CMD-check.yaml)
-[![test
-coverage](https://codecov.io/gh/soubhikbarari/survalign/branch/main/graph/badge.svg)](https://app.codecov.io/gh/soubhikbarari/survalign?branch=main)
+<!-- [![test coverage](https://codecov.io/gh/soubhikbarari/survalign/branch/main/graph/badge.svg)](https://app.codecov.io/gh/soubhikbarari/survalign?branch=main) -->
 [![version](https://img.shields.io/github/r-package/v/soubhikbarari/survalign)](https://github.com/soubhikbarari/survalign/blob/main/DESCRIPTION)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
@@ -33,8 +32,8 @@ its full issue basket.
 |---|---|---|
 | **Alignment Mean** | On average, how aligned is a group member with the group majority across issues? | *"The typical Republican agrees with their party on only 3 out of 6 core issues."* |
 | **Cumulative Weak Alignment** | What share of group members agree on *at least half* of issues? | *"A third of self-identified Democrats don't even agree with their own party on most issues."* |
-| **Cumulative Perfect Alignment** | What share of group members agree on *every* issue? | *"Only 8% of Latino voters fully back any party's complete platform."* |
-| **Issue Alignment** | How many issues *cumulatively* have majority support from a group? | *"Republicans reach a true majority consensus on just 2 of 6 issues — not 6."* |
+| **Cumulative Perfect Alignment** | What share of group members agree on *every* issue? | *"Only 42% of Trump voters fully back the Republican issue agenda across all issues."* |
+| **Issue Alignment** | How many issues *cumulatively* have majority support from a group? | *"Hispanic voters reach a true majority consensus on just 2 of 6 issues."* |
 | **Alignment Curve** | What share of the group supports what percent of issues? | *"Gen-Z women look unified issue-by-issue, but the curve reveals most voters defect on at least one."* |
 
 ## Installation
