@@ -6,7 +6,6 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/soubhikbarari/survalign/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/soubhikbarari/survalign/actions/workflows/R-CMD-check.yaml)
-<!-- [![test coverage](https://codecov.io/gh/soubhikbarari/survalign/branch/main/graph/badge.svg)](https://app.codecov.io/gh/soubhikbarari/survalign?branch=main) -->
 [![version](https://img.shields.io/github/r-package/v/soubhikbarari/survalign)](https://github.com/soubhikbarari/survalign/blob/main/DESCRIPTION)
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
