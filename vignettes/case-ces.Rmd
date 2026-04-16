@@ -29,8 +29,7 @@ details ul {
 </style>
 
 ```{r load-lib, echo=FALSE, warning=FALSE, message=FALSE}
-devtools::load_all()
-
+library(survalign)
 library(dplyr)
 library(stringr)
 library(knitr)
