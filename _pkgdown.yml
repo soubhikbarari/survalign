@@ -1,0 +1,79 @@
+url: ~
+
+template:
+  bootstrap: 5
+  bootswatch: flatly
+
+navbar:
+  structure:
+    left: [intro, reference, articles]
+    right: [search, github]
+  components:
+    articles:
+      text: Articles
+      menu:
+      - text: "Getting Started"
+      - text: "Understanding Group Alignment"
+        href: articles/survalign.html
+      - text: "---"
+      - text: "Case Studies"
+      - text: "CES (Cooperative Election Study)"
+        href: articles/case-ces.html
+      - text: "GSS (General Social Survey)"
+        href: articles/case-gss.html
+
+articles:
+- title: Getting Started
+  navbar: ~
+  contents:
+  - survalign
+
+- title: Case Studies
+  navbar: ~
+  contents:
+  - case-ces
+  - case-gss
+
+reference:
+- title: Measuring Alignment
+  desc: Core functions for computing alignment metrics.
+  contents:
+  - measure_alignment
+  - measure_alignment_waves
+  - measure_pairwise_support
+
+- title: Visualization
+  desc: Plot alignment results.
+  contents:
+  - plot_alignment_curve
+  - plot_cumulative_support
+  - plot_group_alignment
+  - plot_group_stat_over_time
+  - plot_support
+  - plot_coverage
+  - plot_pairwise_support
+
+- title: Data Preparation
+  desc: Utilities for preparing survey data.
+  contents:
+  - binarize_responses
+
+- title: survalign Objects
+  desc: Methods for survalign result objects.
+  contents:
+  - print.survalign
+  - summary.survalign
+
+- title: Datasets
+  desc: Bundled survey datasets.
+  contents:
+  - ces
+  - gss
+
+- title: Utilities
+  desc: Internal helper functions.
+  contents:
+  - dump_labels
+  - get_top_vals
+  - resolve_ques
+  - weighted_se
