@@ -29,13 +29,13 @@ survalign quantifies this gap with a suite of alignment metrics.
 Each metric captures a different facet of how cohesive a group is across
 its full issue basket.
 
-| Metric | Question it answers |
-|----|----|
-| **Alignment Mean** | On average, how aligned is a group member with the group majority across issues? |
-| **Cumulative Weak Alignment** | What share of members agree on *at least half* of issues? |
-| **Cumulative Perfect Alignment** | What share agrees on *every* issue? |
-| **Issue Alignment** | How many issues *cumulatively* have majority support? |
-| **Alignment Curve** | What share of the group supports what percent of issues? |
+| Metric | Question it answers | Example insight |
+|---|---|---|
+| **Alignment Mean** | On average, how aligned is a group member with the group majority across issues? | *"The typical Republican agrees with their party on only 3 out of 6 core issues."* |
+| **Cumulative Weak Alignment** | What share of group members agree on *at least half* of issues? | *"A third of self-identified Democrats don't even agree with their own party on most issues."* |
+| **Cumulative Perfect Alignment** | What share of group members agree on *every* issue? | *"Only 8% of Latino voters fully back any party's complete platform."* |
+| **Issue Alignment** | How many issues *cumulatively* have majority support from a group? | *"Republicans reach a true majority consensus on just 2 of 6 issues — not 6."* |
+| **Alignment Curve** | What share of the group supports what percent of issues? | *"Gen-Z women look unified issue-by-issue, but the curve reveals most voters defect on at least one."* |
 
 ## Installation
 
