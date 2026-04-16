@@ -30,7 +30,7 @@ its full issue basket.
 | Metric | Question it answers | Example insight |
 |---|---|---|
 | **Alignment Mean** | On average, how aligned is a group member with the group majority across issues? | *"The typical Republican agrees with their party on only 3 out of 6 core issues."* |
-| **Cumulative Weak Alignment** | What share of group members agree on *at least half* of issues? | *"A third of self-identified Democrats don't even agree with their own party on most issues."* |
+| **Cumulative Weak Alignment** | What share of group members agree on *at least half* of issues? | *"A third of self-identified Democrats disagree with their own party on most core issues."* |
 | **Cumulative Perfect Alignment** | What share of group members agree on *every* issue? | *"Only 42% of Trump voters fully back the Republican issue agenda across all issues."* |
 | **Issue Alignment** | How many issues *cumulatively* have majority support from a group? | *"Hispanic voters reach a true majority consensus on just 2 of 6 issues."* |
 | **Alignment Curve** | What share of the group supports what percent of issues? | *"Gen-Z women look unified issue-by-issue, but the curve reveals most voters defect on at least one."* |
