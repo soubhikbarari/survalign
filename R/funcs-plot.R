@@ -155,26 +155,27 @@ plot_alignment_curve <- function(
     interactive = FALSE
 ) {
   binarized <- !all(is.null(base::attr(results, "binarized_cols", exact = TRUE)))
+  grp_col <- base::attr(results, "group_col", exact = TRUE)
   cumul_align <- resolution |>
     map(~results$respondent_alignment |>
-          filter_at(base::attr(results, "group_col", exact = TRUE), ~!(.x %in% exclude_vals)) |>
-          group_by_at(base::attr(results, "group_col", exact = TRUE)) |>
+          filter(!(.data[[grp_col]] %in% exclude_vals)) |>
+          group_by(across(all_of(grp_col))) |>
           summarise(q = .x,
                     p = mean(prop_questions_aligned >= .x, na.rm=T),
                     n = n(),
                     .groups = "drop")) |>
     bind_rows() |>
-    mutate(val_label = as.character(.data[[base::attr(results, "group_col", exact = TRUE)]]))
+    mutate(val_label = as.character(.data[[grp_col]]))
 
   cumul_align <- cumul_align |>
     bind_rows(
       cumul_align |>
-        group_by_at(base::attr(results, "group_col", exact = TRUE)) |>
+        group_by(across(all_of(grp_col))) |>
         summarise(q = 1, p = 0, n = first(n), val_label = first(val_label), .groups = "drop")
     )
 
   plot_data <- cumul_align |>
-    distinct_at(c(base::attr(results, "group_col", exact = TRUE), "p"), .keep_all = TRUE) |>
+    distinct(across(all_of(c(grp_col, "p"))), .keep_all = TRUE) |>
     mutate(
       tooltip = sprintf(
         "<b>%s%%</b> of %s respondents\nagree with the %s majority\non <b>%s%% or more</b> of issues",
@@ -229,7 +230,21 @@ plot_alignment_curve <- function(
       )
     }
     p <- p + theme(legend.position = "bottom")
-    return(plotly::ggplotly(p, tooltip = "text"))
+    # geom_vline/geom_hline have no 'text' aesthetic and cause ggplotly errors;
+    # strip them and re-add as plotly layout shapes instead.
+    p$layers <- p$layers[
+      !sapply(p$layers, function(l) inherits(l$geom, c("GeomVline", "GeomHline")))
+    ]
+    pl <- plotly::ggplotly(p, tooltip = "text")
+    pl <- plotly::layout(pl, shapes = list(
+      list(type = "line", xref = "x", yref = "paper",
+           x0 = 0.5, x1 = 0.5, y0 = 0, y1 = 1,
+           line = list(color = "rgba(0,0,0,0.4)")),
+      list(type = "line", xref = "paper", yref = "y",
+           x0 = 0, x1 = 1, y0 = 0.5, y1 = 0.5,
+           line = list(color = "rgba(0,0,0,0.4)"))
+    ))
+    return(pl)
   }
 
   p
