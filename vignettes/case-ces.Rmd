@@ -28,7 +28,17 @@ details ul {
 }
 </style>
 
-```{r load-lib, echo=FALSE, warning=FALSE, message=FALSE}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = TRUE,
+  message = FALSE,
+  warning = FALSE,
+  fig.width  = 7,
+  fig.height = 5
+)
+```
+
+```{r load-lib, echo=FALSE}
 library(survalign)
 library(tidyverse)
 library(stringr)
@@ -88,7 +98,7 @@ The core items used in the alignment analysis below cover immigration, environme
 cat('<details>\n<summary>CES Core Policy Preference Items (click to expand)</summary>\n<ul>\n')
 ces_core_items <- colnames(ces)[grepl("(abort|immig|enviro|guns|military|trade)", colnames(ces))]
 for (item in ces_core_items) {
-  cat(paste0('<li><code>', item, '</code>: ', attr(ces[[item]], "label"), '</li>\n'))
+  cat(paste0('<li><code>', item, '</code>: ', base::attr(ces[[item]], "label", exact=T), '</li>\n'))
 }
 cat('</ul>\n</details>\n\n')
 ```
@@ -144,9 +154,15 @@ summary(ces24_core_align, format="long") |>
 ```
 
 
-```{r plot-ces-pid-alignment-interactive}
+```{r plot-ces-pid-alignment-show, echo=TRUE, eval=FALSE}
 ces24_core_align |>
-    plot_alignment_curve(group_colors=pid_colors, interactive=TRUE)
+    plot_alignment_curve(group_colors = pid_colors)
+```
+
+```{r plot-ces-pid-alignment-run, echo=FALSE, eval=TRUE, fig.height=4.5}
+ces24_core_align |>
+    plot_alignment_curve(group_colors = pid_colors) +
+    theme(legend.position = "top")
 ```
 
 ## Alignment with Different Missing Value Assumptions
@@ -226,7 +242,7 @@ Alignment scores can be sensitive to the choice of issue baskets. The core polic
 cat('<details>\n<summary>CES National Spending Items (click to expand)</summary>\n<ul>\n')
 ces_spending_items <- colnames(ces)[grepl("spend", colnames(ces))]
 for (item in ces_spending_items) {
-  cat(paste0('<li><code>', item, '</code>: ', attr(ces[[item]], "label"), '</li>\n'))
+  cat(paste0('<li><code>', item, '</code>: ', base::attr(ces[[item]], "label", exact=T), '</li>\n'))
 }
 cat('</ul>\n</details>\n\n')
 ```

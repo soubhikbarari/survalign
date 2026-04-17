@@ -6,7 +6,7 @@
 \usage{
 plot_alignment_curve(
   results,
-  group_label = attr(results, "group_label"),
+  group_label = base::attr(results, "group_label", exact = TRUE),
   group_colors = NULL,
   exclude_vals = "DK/REF",
   resolution = seq(0, 1, by = 0.01),
