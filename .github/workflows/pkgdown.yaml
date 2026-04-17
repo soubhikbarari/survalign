@@ -1,5 +1,4 @@
 # Build pkgdown site and deploy to gh-pages branch.
-# Skips the GSS vignette to keep build times reasonable.
 on:
   push:
     branches: [main]
@@ -35,7 +34,7 @@ jobs:
             pkgdown::init_site()
             pkgdown::build_home()
             pkgdown::build_reference()
-            pkgdown::build_articles(topics = c('survalign', 'case-ces'))
+            pkgdown::build_articles()
             pkgdown::build_news()
           "
 
