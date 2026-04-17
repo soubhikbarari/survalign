@@ -14,6 +14,7 @@ Imports:
     purrr,
     tidyr,
     ggplot2,
+    plotly,
     scales,
     cli,
     labelled,
@@ -22,7 +23,6 @@ Imports:
 Suggests:
     testthat (>= 3.0.0),
     tibble,
-    plotly,
     knitr,
     rmarkdown,
     tidyverse,

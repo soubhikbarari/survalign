@@ -8,7 +8,7 @@
 [![R-CMD-check](https://github.com/soubhikbarari/survalign/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/soubhikbarari/survalign/actions/workflows/R-CMD-check.yaml)
 [![version](https://img.shields.io/github/r-package/v/soubhikbarari/survalign)](https://github.com/soubhikbarari/survalign/blob/main/DESCRIPTION)
 [![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+stable](https://img.shields.io/badge/lifecycle-stable-green.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 <!-- badges: end -->
 
 **Democracy doesn’t work one issue at a time.**
@@ -54,6 +54,7 @@ everything needed for plotting.
 ``` r
 library(survalign)
 library(dplyr)
+library(ggplot2)
 
 # Load bundled CES data
 data(ces)

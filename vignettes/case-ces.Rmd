@@ -135,15 +135,14 @@ The alignment curve summarizes how alignment accumulates as the threshold for "a
 
 ```{r plot-ces-pid-alignment-curve}
 ces24_core_align |>
-  plot_alignment_curve(group_colors=pid_colors)
+  plot_alignment_curve(group_colors=pid_colors, interactive=TRUE)
 ```
 
 ```{r summarise-ces-pid-alignment, eval=FALSE}
 summary(ces24_core_align, format="long")
 ```
 
-
-```{r summarise-ces-pid-alignment-eval, eval=TRUE, include=FALSE}
+```{r summarise-ces-pid-alignment-eval, eval=TRUE, echo=FALSE}
 summary(ces24_core_align, format="long") |>
   mutate(statistic = statistic |>
            str_replace_all("_", " ") |>
@@ -151,18 +150,6 @@ summary(ces24_core_align, format="long") |>
            str_replace("Se", "SE"),
          value = round(value, digits=2)) |>
     kable()
-```
-
-
-```{r plot-ces-pid-alignment-show, echo=TRUE, eval=FALSE}
-ces24_core_align |>
-    plot_alignment_curve(group_colors = pid_colors)
-```
-
-```{r plot-ces-pid-alignment-run, echo=FALSE, eval=TRUE, fig.height=4.5}
-ces24_core_align |>
-    plot_alignment_curve(group_colors = pid_colors) +
-    theme(legend.position = "top")
 ```
 
 ## Alignment with Different Missing Value Assumptions

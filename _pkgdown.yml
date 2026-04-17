@@ -2,7 +2,7 @@ url: https://soubhikbarari.github.io/survalign
 
 template:
   bootstrap: 5
-  bootswatch: litera
+  bootswatch: sandstone
 
 navbar:
   structure:
