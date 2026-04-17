@@ -19,8 +19,6 @@ navbar:
       - text: "Case Studies"
       - text: "CES (Cooperative Election Study)"
         href: articles/case-ces.html
-      - text: "GSS (General Social Survey)"
-        href: articles/case-gss.html
 
 articles:
 - title: Getting Started
@@ -32,7 +30,6 @@ articles:
   navbar: ~
   contents:
   - case-ces
-  - case-gss
 
 reference:
 - title: Measuring Alignment

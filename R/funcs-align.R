@@ -9,6 +9,7 @@
 #' @param group_col Grouping variable or named list for labeling.
 #' @param weight_col Optional weight column name.
 #' @param id_col Optional respondent id column name.
+#' @param verbose Logical; if `TRUE` (default) prints progress messages.
 #' @param treat_na How to handle NA responses in alignment.
 #' @return List of analysis tables and metadata attributes.
 #' @export
@@ -59,11 +60,11 @@ measure_alignment <- function(
     labelled::unlabelled()
 
   data_long <- data |>
-    mutate_at(ques_cols, ~haven::zap_labels(.x)) |>
-    mutate_at(ques_cols, ~as.character(.x)) |>
-    select_at(c(group_col, weight_col, id_col, ques_cols)) |>
-    filter_at(group_col, ~!is.na(.x)) |>
-    pivot_longer(cols = ques_cols, names_to = "question", values_to = "response")
+    mutate(across(all_of(ques_cols), ~haven::zap_labels(.x))) |>
+    mutate(across(all_of(ques_cols), as.character)) |>
+    select(all_of(c(group_col, weight_col, id_col, ques_cols))) |>
+    filter(!is.na(.data[[group_col]])) |>
+    pivot_longer(cols = all_of(ques_cols), names_to = "question", values_to = "response")
   
   if (all(is.na(data_long$response)))
     stop("all responses are NA")
@@ -88,7 +89,7 @@ measure_alignment <- function(
     arrange(desc(prop_response_wtd), response) |>
     filter(row_number() == 1) |>
     mutate(maj_wtd = prop_response_wtd > 0.5) |>
-    arrange_at(c("question", group_col)) |>
+    arrange(across(all_of(c("question", group_col)))) |>
     rename(plurality_response = response)
   if (nrow(plurality_opinions) == 0) {
     stop("No plurality opinions computed. Confirm question columns are present/valid and responses exist.")
@@ -137,8 +138,8 @@ measure_alignment <- function(
   }
   thin_n <- sum(respondent_alignment$num_items <= 2, na.rm = TRUE)
   if (thin_n > 0) {
-    warning(sprintf(
-      "%d respondent(s) answered only 1-2 items; their alignment scores (0, 0.5, or 1.0) are high-variance. Consider filtering before interpreting.",
+    message(sprintf(
+      "Note: %d respondent(s) answered only 1-2 items; their alignment scores (0, 0.5, or 1.0) are high-variance. Consider filtering before interpreting.",
       thin_n
     ))
   }
@@ -152,7 +153,7 @@ measure_alignment <- function(
       ## subset to all questions at current alignment or higher
       inner_join(curr_question_alignment,
                  by = c(group_col, "question", "plurality_response")) |>
-      arrange_at(group_col) |>
+      arrange(across(all_of(group_col))) |>
       ## determine whether each respondent is in perfect alignment with all questions so far 
       group_by(!!sym(group_col), !!sym(id_col), !!sym(weight_col)) |>
       summarise(aligned_drop_na = if (all(is.na(aligned))) NA else all(aligned == T, na.rm = TRUE),
@@ -265,6 +266,8 @@ measure_alignment <- function(
 
 
 #' Print method for survalign objects.
+#' @param x An object of class `'survalign'`.
+#' @param ... Additional arguments (ignored).
 #' @method print survalign
 #' @export
 print.survalign <- function(x, ...) {
@@ -288,10 +291,11 @@ print.survalign <- function(x, ...) {
 #' Returns group-level alignment statistics from a `survalign` object created by `measure_alignment()`.
 #'
 #' @param object An object of class 'survalign'.
+#' @param format One of `"wide"` (default) or `"long"`. Controls whether group stats are returned in wide or long format.
 #' @param ... Additional arguments (ignored).
 #' @return A data frame of group stats, including respondent alignment and plurality metrics.
 #' @export
-summary.survalign <- function(object, format = c("wide", "long")) {
+summary.survalign <- function(object, format = c("wide", "long"), ...) {
   format <- match.arg(format)
   if (format == "wide") {
     return(object$group_stats)

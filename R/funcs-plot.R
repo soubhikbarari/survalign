@@ -207,13 +207,13 @@ plot_alignment_curve <- function(
       name = paste0(group_label, ":")
     ) +
     scale_x_continuous(
-      label = scales::percent_format(1),
+      labels = scales::percent_format(1),
       limits = c(0, 1),
       name = "...who support % (or more) of group majority positions"
       # name = "Alignment threshold: % (or more) of group majority positions supported"
     ) +
     scale_y_continuous(
-      label = scales::percent_format(1),
+      labels = scales::percent_format(1),
       limits = c(0, 1),
       name = "% of respondents..."
       # name = "% of respondents meeting threshold"

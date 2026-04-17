@@ -7,6 +7,7 @@ Description: Tools for measuring public opinion alignment within groups using cr
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
+LazyDataCompression: xz
 Imports:
     dplyr,
     stringr,
@@ -25,7 +26,6 @@ Suggests:
     knitr,
     rmarkdown,
     tidyverse,
-    scales,
     pkgdown
 VignetteBuilder: knitr
 Config/testthat/edition: 3

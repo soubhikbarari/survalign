@@ -3,6 +3,9 @@
 #' Uses the Kish effective sample size approximation:
 #'   n_eff = (sum w)^2 / sum(w^2)
 #' so SE = sd_w / sqrt(n_eff), where sd_w is the weighted standard deviation.
+#' @param x Numeric vector of values.
+#' @param w Numeric vector of weights, same length as `x`.
+#' @return A single numeric SE value.
 weighted_se <- function(x, w) {
   keep <- !is.na(x) & !is.na(w)
   x <- x[keep]; w <- w[keep]
@@ -14,6 +17,11 @@ weighted_se <- function(x, w) {
 }
 
 #' Resolve columns corresponding to questions (internal)
+#' @param data Data frame to resolve columns from.
+#' @param ques_cols Optional character vector of explicit column names.
+#' @param ques_stem Optional regex string matched against column names.
+#' @param exclude_cols Optional character vector of column names to exclude.
+#' @return Character vector of resolved question column names.
 resolve_ques <- function(data, ques_cols = NULL, ques_stem = NULL, exclude_cols = NULL) {
   if (!is.null(ques_cols)) {
     if (!is.null(ques_stem)) {
@@ -45,6 +53,9 @@ resolve_ques <- function(data, ques_cols = NULL, ques_stem = NULL, exclude_cols 
 }
 
 #' Get top values for columns (as list)
+#' @param data Data frame containing the columns.
+#' @param ques_cols Character vector of column names to inspect.
+#' @return Named numeric vector of max values per column.
 get_top_vals <- function(data, ques_cols) {
   top_vals <- purrr::map_dbl(ques_cols, function(col) {
     x <- data[[col]]
@@ -56,6 +67,10 @@ get_top_vals <- function(data, ques_cols) {
 }
 
 #' Dump column labels to dataframe (internal)
+#' @param data Data frame with (optionally) labelled columns.
+#' @param attr Which label attribute to extract; one of `"label"` or `"shortlabel"`.
+#' @param file Optional file path; if provided, writes a CSV to that path.
+#' @return A data frame with columns `var` and `label`.
 dump_labels <- function(data, attr = c("label", "shortlabel"), file = NULL) {
   attr <- match.arg(attr)
   info <- lapply(colnames(data), function(col) {
