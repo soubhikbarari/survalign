@@ -42,7 +42,7 @@ measure_alignment <- function(
     group_label <- names(group_col)[1]
     group_col <- group_col[[1]]
   } else {
-    group_label <- attr(data[[group_col]], "label")
+    group_label <- base::attr(data[[group_col]], "label", exact = TRUE)
     group_col <- group_col[1]
   }
 
@@ -224,26 +224,26 @@ measure_alignment <- function(
                 .groups = "drop"),
       by = group_col)
   
-  attr(group_stats$cumulative_perfect_alignment, "label") <- "Percent of respondents perfectly aligned"
-  attr(group_stats$cumulative_perfect_alignment, "description") <- "Respondents who support their group's majority position across all issues"
-  
-  attr(group_stats$cumulative_weak_alignment, "label") <- "Percent of respondents weakly aligned"
-  attr(group_stats$cumulative_weak_alignment, "description") <- "Respondents who support their group's majority position across most issues"
-  
-  attr(group_stats$alignment_mean, "label") <- "Average percent of respondent alignment"
-  attr(group_stats$alignment_mean, "description") <- "Average percent of issues where respondent supports their group's majority position"
+  base::attr(group_stats$cumulative_perfect_alignment, "label") <- "Percent of respondents perfectly aligned"
+  base::attr(group_stats$cumulative_perfect_alignment, "description") <- "Respondents who support their group's majority position across all issues"
 
-  attr(group_stats$alignment_se, "label") <- "Standard error of respondent alignment"
-  attr(group_stats$alignment_se, "description") <- "Standard error of percent of issues where respondent supports their group's majority position"
-  
-  attr(group_stats$mean_plurality, "label") <- "Average majority support"
-  attr(group_stats$mean_plurality, "description") <- "Average percent of respondents aligned with group majority across all issues"
-  
-  attr(group_stats$cumulative_issue_alignment_n, "label") <- "Cumulative issue alignment (N)"
-  attr(group_stats$cumulative_issue_alignment_n, "description") <- "Number of issues where a majority of respondents support their group's majority position"
-  
-  attr(group_stats$cumulative_issue_alignment_prop, "label") <- "Cumulative issue alignment (%)"
-  attr(group_stats$cumulative_issue_alignment_prop, "description") <- "Percent of issues where a majority of respondents support their group's majority position"
+  base::attr(group_stats$cumulative_weak_alignment, "label") <- "Percent of respondents weakly aligned"
+  base::attr(group_stats$cumulative_weak_alignment, "description") <- "Respondents who support their group's majority position across most issues"
+
+  base::attr(group_stats$alignment_mean, "label") <- "Average percent of respondent alignment"
+  base::attr(group_stats$alignment_mean, "description") <- "Average percent of issues where respondent supports their group's majority position"
+
+  base::attr(group_stats$alignment_se, "label") <- "Standard error of respondent alignment"
+  base::attr(group_stats$alignment_se, "description") <- "Standard error of percent of issues where respondent supports their group's majority position"
+
+  base::attr(group_stats$mean_plurality, "label") <- "Average majority support"
+  base::attr(group_stats$mean_plurality, "description") <- "Average percent of respondents aligned with group majority across all issues"
+
+  base::attr(group_stats$cumulative_issue_alignment_n, "label") <- "Cumulative issue alignment (N)"
+  base::attr(group_stats$cumulative_issue_alignment_n, "description") <- "Number of issues where a majority of respondents support their group's majority position"
+
+  base::attr(group_stats$cumulative_issue_alignment_prop, "label") <- "Cumulative issue alignment (%)"
+  base::attr(group_stats$cumulative_issue_alignment_prop, "description") <- "Percent of issues where a majority of respondents support their group's majority position"
 
   # Output all dataframes
   output <- list(
@@ -254,11 +254,11 @@ measure_alignment <- function(
     group_stats = group_stats,
     question_labels = question_labels
   )
-  attr(output, "group_label") <- group_label
-  attr(output, "group_col") <- group_col
-  attr(output, "weight_col") <- weight_col
-  attr(output, "id_col") <- id_col
-  attr(output, "treat_na") <- treat_na
+  base::attr(output, "group_label") <- group_label
+  base::attr(output, "group_col") <- group_col
+  base::attr(output, "weight_col") <- weight_col
+  base::attr(output, "id_col") <- id_col
+  base::attr(output, "treat_na") <- treat_na
   
   class(output) <- c("survalign", class(output))
   return(output)
@@ -276,9 +276,9 @@ print.survalign <- function(x, ...) {
   }
   cli::cli_text("{.strong Survey Alignment Measures}")
   cli::cli_bullets(c(
-    "- {.field Group}: {.val {attr(x, 'group_col')}}",
-    "- {.field Weight}: {.val {attr(x, 'weight_col')}}",
-    "- {.field NA handling}: {.val {attr(x, 'treat_na')}}",
+    "- {.field Group}: {.val {base::attr(x, 'group_col', exact = TRUE)}}",
+    "- {.field Weight}: {.val {base::attr(x, 'weight_col', exact = TRUE)}}",
+    "- {.field NA handling}: {.val {base::attr(x, 'treat_na', exact = TRUE)}}",
     "- {.field Number of groups}: {.val {nrow(x$group_stats)}}",
     "- {.field Number of respondents}: {.val {nrow(x$respondent_alignment)}}",
     "- {.field Number of questions}: {.val {dplyr::n_distinct(x$question_pluralities$question)}}"
@@ -301,7 +301,7 @@ summary.survalign <- function(object, format = c("wide", "long"), ...) {
     return(object$group_stats)
   } else {
     return(object$group_stats |>
-             pivot_longer(-any_of(attr(object, "group_col")),
+             pivot_longer(-any_of(base::attr(object, "group_col", exact = TRUE)),
                           names_to = "statistic", values_to = "value"))
   }
 }

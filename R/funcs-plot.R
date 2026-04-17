@@ -18,7 +18,7 @@ plot_cumulative_majority <- function(
     majority_cutoff = FALSE
 ) {
   dat <- results$question_cumulative_pluralities |>
-    rename_at(attr(results, "group_col"), ~"group_col") |>
+    rename_at(base::attr(results, "group_col", exact = TRUE), ~"group_col") |>
     mutate(group_col = str_to_title(group_col)) |>
     arrange(group_col, desc(prop_cumulative_plurality)) |>
     group_by(group_col) |>
@@ -88,8 +88,8 @@ plot_group_alignment <- function(
 ) {
   show_dists_as <- match.arg(show_dists_as)
   data <- results$respondent_alignment |> 
-    filter_at(attr(results, "group_col"), ~!(.x %in% exclude_vals)) |>
-    rename_at(attr(results, "group_col"), ~"g") |>
+    filter_at(base::attr(results, "group_col", exact = TRUE), ~!(.x %in% exclude_vals)) |>
+    rename_at(base::attr(results, "group_col", exact = TRUE), ~"g") |>
     group_by(g) |>
     mutate(val_label = g) |>
     # mutate(val_label = paste0(trimws(g, whitespace = "[ \t\r\n“”]"),"\n(n=",n(),")")) |>
@@ -108,8 +108,8 @@ plot_group_alignment <- function(
       geom_histogram(fill="grey", color="grey", bins = 10)
   } 
   plot <- plot +
-    scale_fill_discrete(name = attr(results, "group_label")) +
-    scale_color_discrete(name = attr(results, "group_label"))
+    scale_fill_discrete(name = base::attr(results, "group_label", exact = TRUE)) +
+    scale_color_discrete(name = base::attr(results, "group_label", exact = TRUE))
   
   if (show_mean) {
     plot <- plot +
@@ -148,33 +148,33 @@ plot_group_alignment <- function(
 #' @export
 plot_alignment_curve <- function(
     results, 
-    group_label = attr(results, "group_label"),
+    group_label = base::attr(results, "group_label", exact = TRUE),
     group_colors = NULL,
     exclude_vals = "DK/REF", 
     resolution = seq(0, 1, by = 0.01),
     interactive = FALSE
 ) {
-  binarized <- !all(is.null(attr(results, "binarized_cols")))
+  binarized <- !all(is.null(base::attr(results, "binarized_cols", exact = TRUE)))
   cumul_align <- resolution |>
     map(~results$respondent_alignment |>
-          filter_at(attr(results, "group_col"), ~!(.x %in% exclude_vals)) |>
-          group_by_at(attr(results, "group_col")) |>
+          filter_at(base::attr(results, "group_col", exact = TRUE), ~!(.x %in% exclude_vals)) |>
+          group_by_at(base::attr(results, "group_col", exact = TRUE)) |>
           summarise(q = .x,
                     p = mean(prop_questions_aligned >= .x, na.rm=T),
                     n = n(),
                     .groups = "drop")) |>
     bind_rows() |>
-    mutate(val_label = as.character(.data[[attr(results, "group_col")]]))
+    mutate(val_label = as.character(.data[[base::attr(results, "group_col", exact = TRUE)]]))
 
   cumul_align <- cumul_align |>
     bind_rows(
       cumul_align |>
-        group_by_at(attr(results, "group_col")) |>
+        group_by_at(base::attr(results, "group_col", exact = TRUE)) |>
         summarise(q = 1, p = 0, n = first(n), val_label = first(val_label), .groups = "drop")
     )
 
   plot_data <- cumul_align |>
-    distinct_at(c(attr(results, "group_col"), "p"), .keep_all = TRUE) |>
+    distinct_at(c(base::attr(results, "group_col", exact = TRUE), "p"), .keep_all = TRUE) |>
     mutate(
       tooltip = sprintf(
         "<b>%s%%</b> of %s respondents\nagree with the %s majority\non <b>%s%% or more</b> of issues",
@@ -265,7 +265,7 @@ plot_group_stat_over_time <- function(
   # Build long table of group stats across periods
   group_stats_t <- purrr::imap_dfr(results_list, function(result, period_label) {
     if (!is.list(result) || is.null(result$group_stats)) return(NULL)
-    result_group_col <- attr(result, "group_col")
+    result_group_col <- base::attr(result, "group_col", exact = TRUE)
     if (is.null(result_group_col) || !(result_group_col %in% colnames(result$group_stats))) return(NULL)
     result$group_stats |>
       dplyr::rename(!!rlang::sym(group_col) := !!rlang::sym(result_group_col)) |>
@@ -290,14 +290,14 @@ plot_group_stat_over_time <- function(
     }
   }
   y_label <- if (!is.null(sample_result)) {
-    lab <- attr(sample_result$group_stats[[metric]], "label")
+    lab <- base::attr(sample_result$group_stats[[metric]], "label", exact = TRUE)
     if (!is.null(lab) && nzchar(lab)) lab else ""
   } else {
     ""
   }
   y_label <- paste0(y_label, "*")
   cap_label <- if (!is.null(sample_result)) {
-    lab <- attr(sample_result$group_stats[[metric]], "description")
+    lab <- base::attr(sample_result$group_stats[[metric]], "description", exact = TRUE)
     if (!is.null(lab) && nzchar(lab)) lab else ""
   } else {
     ""

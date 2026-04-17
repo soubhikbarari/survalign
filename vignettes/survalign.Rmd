@@ -266,7 +266,7 @@ The alignment curve is the most complete picture of group cohesion. It doesn't r
 The curve encodes the earlier metrics as readable points: the x-value where the horizontal 50% line intersects the curve gives $\alpha_g$; the y-value at $t = 1$ gives $A_g$. **Hover over any point to read an exact plain-English interpretation:**
 
 ```{r alignment-curve-plot, fig.height=5}
-plot_alignment_curve(align, interactive = TRUE)
+plot_alignment_curve(align)
 ```
 
 **How to interpret it:** The Cohesive coalition's curve stays near the top of the chart before declining — meaning large fractions of members are highly aligned. The Fragmented coalition's curve drops off quickly, indicating that requiring broad agreement rapidly excludes most members.

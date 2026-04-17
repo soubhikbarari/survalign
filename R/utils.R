@@ -74,8 +74,8 @@ get_top_vals <- function(data, ques_cols) {
 dump_labels <- function(data, attr = c("label", "shortlabel"), file = NULL) {
   attr <- match.arg(attr)
   info <- lapply(colnames(data), function(col) {
-    label <- if (!is.null(attr(data[[col]], attr))) {
-      as.character(attr(data[[col]], attr))
+    label <- if (!is.null(base::attr(data[[col]], attr, exact = TRUE))) {
+      as.character(base::attr(data[[col]], attr, exact = TRUE))
     } else {
       NA
     }
@@ -138,7 +138,7 @@ binarize_responses <- function(data, ques_cols = NULL, ques_stem = NULL, thresho
       }
       return(y)
     }))
-  attr(out, "binarized_cols") <- ques_cols
+  base::attr(out, "binarized_cols") <- ques_cols
   out
 }
 
@@ -180,7 +180,7 @@ plot_coverage <- function(
   p <- coverage |>
     pivot_longer(cols = -all_of(wave_col), names_to = "variable", values_to = "pct_missing") |>
     filter(pct_missing != 1) |>
-    mutate(variable = str_to_kebab(variable)) |>
+    mutate(variable = stringr::str_replace_all(variable, "_", "-")) |>
     ggplot(aes(y = variable, x = .data[[wave_col]], fill = 100*pct_missing)) +
     geom_tile(color = "white")
   
@@ -267,7 +267,7 @@ plot_support <- function(
     filter(!is.na(pct_support)) |>
     rename_at(vars(all_of(group_col)), ~"group_col") |>
     filter(!is.na(group_col)) |>
-    mutate(variable = stringr::str_to_kebab(variable))
+    mutate(variable = stringr::str_replace_all(variable, "_", "-"))
 
   if (!use_wave) {
     # Bar plot when no wave_col is provided
@@ -488,8 +488,8 @@ plot_pairwise_support <- function(
   plot_data <- results |>
     filter(!is.na(percent_both_support)) |>
     mutate(
-      q1 = stringr::str_to_kebab(q1),
-      q2 = stringr::str_to_kebab(q2),
+      q1 = stringr::str_replace_all(q1, "_", "-"),
+      q2 = stringr::str_replace_all(q2, "_", "-"),
       pct = percent_both_support * 100
     )
 
