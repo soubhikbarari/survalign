@@ -2,7 +2,7 @@ url: https://soubhikbarari.github.io/survalign
 
 template:
   bootstrap: 5
-  bootswatch: flatly
+  bootswatch: litera
 
 navbar:
   structure:
@@ -43,7 +43,7 @@ reference:
   desc: Plot alignment results.
   contents:
   - plot_alignment_curve
-  - plot_cumulative_support
+  - plot_cumulative_majority
   - plot_group_alignment
   - plot_group_stat_over_time
   - plot_support
