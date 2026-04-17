@@ -4,10 +4,12 @@
 \alias{summary.survalign}
 \title{Summary method for survalign objects.}
 \usage{
-\method{summary}{survalign}(object, format = c("wide", "long"))
+\method{summary}{survalign}(object, format = c("wide", "long"), ...)
 }
 \arguments{
 \item{object}{An object of class 'survalign'.}
+
+\item{format}{One of \code{"wide"} (default) or \code{"long"}. Controls whether group stats are returned in wide or long format.}
 
 \item{...}{Additional arguments (ignored).}
 }

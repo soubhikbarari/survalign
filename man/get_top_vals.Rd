@@ -6,6 +6,14 @@
 \usage{
 get_top_vals(data, ques_cols)
 }
+\arguments{
+\item{data}{Data frame containing the columns.}
+
+\item{ques_cols}{Character vector of column names to inspect.}
+}
+\value{
+Named numeric vector of max values per column.
+}
 \description{
 Get top values for columns (as list)
 }

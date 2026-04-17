@@ -6,6 +6,16 @@
 \usage{
 dump_labels(data, attr = c("label", "shortlabel"), file = NULL)
 }
+\arguments{
+\item{data}{Data frame with (optionally) labelled columns.}
+
+\item{attr}{Which label attribute to extract; one of \code{"label"} or \code{"shortlabel"}.}
+
+\item{file}{Optional file path; if provided, writes a CSV to that path.}
+}
+\value{
+A data frame with columns \code{var} and \code{label}.
+}
 \description{
 Dump column labels to dataframe (internal)
 }

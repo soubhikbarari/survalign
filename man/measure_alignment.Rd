@@ -31,6 +31,8 @@ measure_alignment(
 
 \item{id_col}{Optional respondent id column name.}
 
+\item{verbose}{Logical; if \code{TRUE} (default) prints progress messages.}
+
 \item{treat_na}{How to handle NA responses in alignment.}
 }
 \value{

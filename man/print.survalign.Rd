@@ -6,6 +6,11 @@
 \usage{
 \method{print}{survalign}(x, ...)
 }
+\arguments{
+\item{x}{An object of class \code{'survalign'}.}
+
+\item{...}{Additional arguments (ignored).}
+}
 \description{
 Print method for survalign objects.
 }

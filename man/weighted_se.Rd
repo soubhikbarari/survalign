@@ -6,6 +6,14 @@
 \usage{
 weighted_se(x, w)
 }
+\arguments{
+\item{x}{Numeric vector of values.}
+
+\item{w}{Numeric vector of weights, same length as \code{x}.}
+}
+\value{
+A single numeric SE value.
+}
 \description{
 Uses the Kish effective sample size approximation:
 n_eff = (sum w)^2 / sum(w^2)

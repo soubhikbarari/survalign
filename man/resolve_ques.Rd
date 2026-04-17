@@ -6,6 +6,18 @@
 \usage{
 resolve_ques(data, ques_cols = NULL, ques_stem = NULL, exclude_cols = NULL)
 }
+\arguments{
+\item{data}{Data frame to resolve columns from.}
+
+\item{ques_cols}{Optional character vector of explicit column names.}
+
+\item{ques_stem}{Optional regex string matched against column names.}
+
+\item{exclude_cols}{Optional character vector of column names to exclude.}
+}
+\value{
+Character vector of resolved question column names.
+}
 \description{
 Resolve columns corresponding to questions (internal)
 }
