@@ -20,7 +20,7 @@ library(scales)
 library(knitr)
 ```
 
-## Why measure group alignment?
+## Why Measure Group Alignment?
 
 > **Polling a group on a single issue is straightforward — but democracy rarely works one issue at a time. Political coalitions, social movements, and interest groups succeed or fail based on whether their members can agree across a *basket of issues*, not just one in isolation.**
 
@@ -35,7 +35,7 @@ A traditional issue-by-issue analysis would treat both coalitions as equally uni
 
 ---
 
-## Setup: toy data
+## Setup: Toy Data
 
 To ground each metric concretely, we'll use a small synthetic dataset of 500 respondents split into two groups — a **cohesive** coalition and a **fragmented** one — each surveyed on six binary policy questions.
 
@@ -91,7 +91,7 @@ align <- measure_alignment(
 
 ---
 
-## The motivation: issue-by-issue support is limited
+## The Motivation: Issue-by-Issue Support Is Limited
 
 Before walking through the metrics, it is worth seeing why we need them in the first place.
 
@@ -107,7 +107,7 @@ plot_cumulative_majority(align)
 
 ---
 
-## The building block: individual alignment
+## The Building Block: Individual Alignment
 
 `measure_alignment()` returns a structured list. The core respondent-level result is `$respondent_alignment`, which gives each person their overall alignment score — the share of issues on which they agreed with their group's majority:
 
@@ -125,7 +125,7 @@ The key column is `prop_questions_aligned`: a value of 1.0 means perfect agreeme
 
 ---
 
-## Metric 1: Alignment mean
+## Metric 1: Alignment Mean
 
 **Definition:** The average alignment score across all respondents in a group. *Units: respondents' average share-of-issues agreed, 0–100%.*
 
@@ -162,7 +162,7 @@ ggplot(resp, aes(x = alignment)) +
 
 ---
 
-## Metric 2: Cumulative weak alignment
+## Metric 2: Cumulative Weak Alignment
 
 **Definition:** The share of respondents who agree with their group's majority on **at least half** of issues. *Units: share of individuals, 0–100%.*
 
@@ -197,7 +197,7 @@ ggplot(resp, aes(x = alignment, fill = alignment >= 0.5)) +
 
 ---
 
-## Metric 3: Cumulative perfect alignment
+## Metric 3: Cumulative Perfect Alignment
 
 **Definition:** The share of respondents who agree with their group's majority on **every single issue**. *Units: share of individuals, 0–100%.*
 
@@ -233,7 +233,7 @@ Note that perfect alignment declines mechanically as more issues are added to th
 
 ---
 
-## Metric 4: Cumulative issue alignment
+## Metric 4: Cumulative Issue Alignment
 
 **Definition:** The number (or share) of issues on which a **majority** of respondents agrees with the group's plurality position. *Units: issues, 0–K issues or equivalently 0–100% of issues.*
 
@@ -255,7 +255,7 @@ summary(align) |>
 
 ---
 
-## Metric 5: The alignment curve
+## Metric 5: The Alignment Curve
 
 **Definition:** A curve plotting, for each alignment threshold $t$, the share of respondents whose alignment score is **at or above** $t$.
 
@@ -273,7 +273,7 @@ plot_alignment_curve(align)
 
 ---
 
-## Putting it all together
+## Putting It All Together
 
 Each metric captures a different facet of group alignment:
 
@@ -310,7 +310,7 @@ No single metric tells the complete story, but together they give a rich, multi-
 
 ---
 
-## Sensitivity to non-response
+## Sensitivity to Non-Response
 
 How non-responses are handled can have real consequences for the interpretation of alignment. 
 
@@ -372,7 +372,7 @@ Which is more appropriate depends on the substantive context. If missing respons
 
 ---
 
-## Sensitivity to the choice of issue basket
+## Sensitivity to the Choice of Issue Basket
 
 All of the metrics above depend critically on **which issues are included**. There is no single "correct" basket — the right choice depends on the research question — but it is important to be transparent about the sensitivity of results to that choice.
 
@@ -437,7 +437,7 @@ The take-away is not that one basket is "wrong," but that the researcher needs t
 
 In general, pre-specify the basket before examining results, and report the sensitivity of conclusions to alternative baskets as a robustness check.
 
-### Basket size and normalization {#normalization}
+### Basket Size and Normalization {#normalization}
 
 Perfect alignment declines mechanically as more issues are added to the basket — even if every item individually has strong majority support. Under independence (i.e., responses to each item are statistically independent), the expected share of perfectly aligned respondents is:
 
