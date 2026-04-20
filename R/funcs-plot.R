@@ -79,7 +79,7 @@ plot_cumulative_majority <- function(
 #' @param ci_scale Multiplier for confidence intervals.
 #' @return ggplot object.
 #' @export
-plot_group_alignment <- function(
+plot_individual_alignments <- function(
     results, 
     exclude_vals = "DK/REF", 
     show_dists_as = c("histogram","density","none"),

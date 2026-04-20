@@ -61,15 +61,21 @@ data(ces)
 
 ## Exploring the Data
 
-Before measuring alignment, it is worth inspecting which items are available across survey waves and how support is distributed across groups. `plot_coverage()` shows which items were fielded in each wave, while `plot_support()` summarizes the share of respondents supporting each item.
+Before measuring alignment, it is worth inspecting which items are available across survey waves and how support is distributed across groups. 
 
-```{r check-ces-coverage}
+First, `plot_coverage()` shows which items were fielded in each wave, which is necessary for the selection of issue basket prior to any temporal analyses.
+
+```{r check-ces-coverage1, fig.height=5}
 ces |>
     plot_coverage(wave_col="year", ques_stem="immig")
+```
 
+```{r check-ces-coverage2, fig.height=3}
 ces |>
     plot_coverage(wave_col="year", ques_stem="spend")
 ```
+
+Meanwhile, `plot_support()` summarizes the share of respondents supporting each item (i.e. selecting the top-coded category for that column), which allows for a helpful birds-eye view of individual issue majorities.
 
 ```{r check-ces-support}
 # Cross-sectional support 
@@ -79,16 +85,16 @@ ces |>
   ggtitle("Support for CES Immigration Items (2024)")
 ```
 
-`plot_pairwise_support()` gives a sense of how correlated responses are across items within a group — a useful diagnostic for whether items are tapping a coherent underlying dimension.
+Similarly, `plot_pairwise_support()` gives a sense of how correlated responses are across items within a group — a useful diagnostic for whether items are tapping a coherent underlying dimension.
+
+We can use this to assess, for instance, Democrats' pairwise support for different spending proposals:
 
 ```{r check-ces-pairwise-support}
 ces |>
   filter(pid3 == "Democrat", year == 2024) |>
   plot_pairwise_support(ques_stem="spend")
-ces |>
-  filter(pid3 == "Democrat", year == 2024) |>
-  plot_pairwise_support(ques_stem="abort")
 ```
+
 
 ## Measuring Alignment
 
@@ -117,7 +123,7 @@ ces24_spend_align |>
   plot_cumulative_majority()
 ```
 
-Now we turn to the broader core policy battery. `plot_group_alignment()` shows the full distribution of pairwise alignment scores across all respondent pairs within each group. The further right the distribution is shifted, the more internally cohesive the group.
+Now we turn to the broader core policy battery. `plot_individual_alignments()` shows the full distribution of pairwise alignment scores across all respondent pairs within each group. The further right the distribution is shifted, the more internally cohesive the group.
 
 ```{r plot-ces-pid-alignment, warning=FALSE, message=FALSE}
 ces24_core_align <- ces |>
@@ -128,7 +134,7 @@ ces24_core_align <- ces |>
     id_col="id"
   )
 ces24_core_align |>
-  plot_group_alignment(show_dists_as="histogram")
+  plot_individual_alignments(show_dists_as="histogram")
 ```
 
 The alignment curve summarizes how alignment accumulates as the threshold for "agreement" increases. A group whose curve stays high across thresholds exhibits robust consensus; a curve that drops off quickly suggests only shallow or item-specific agreement.
