@@ -120,6 +120,3 @@ website](https://soubhikbarari.github.io/survalign/).
 - [CES Case
   Study](https://soubhikbarari.github.io/survalign/articles/case-ces.html)
   — partisan alignment in the Cooperative Election Study
-- [GSS Case
-  Study](https://soubhikbarari.github.io/survalign/articles/case-gss.html)
-  — long-run trends in the General Social Survey
