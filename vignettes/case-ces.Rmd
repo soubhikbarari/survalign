@@ -291,7 +291,9 @@ ces_spend_align |>
 
 ## Alignment Within Different Groups
 
-Party ID is a natural grouping variable for studying policy alignment, but `survalign` works with any categorical grouping. Here we examine alignment on core policy items by racial/ethnic group, where the patterns of internal consensus may differ substantially from the partisan case.
+Party ID is a natural grouping variable for studying policy alignment, but `survalign` works with any categorical grouping.
+
+### Racial Alignment
 
 ```{r ces-race-align, warning=FALSE, message=FALSE}
 ces24_race_align <- ces |>
@@ -306,12 +308,14 @@ ces24_race_align |>
   plot_alignment_curve(interactive = TRUE)
 ```
 
+### Educational Alignment
+
 ```{r ces-educ-align, warning=FALSE, message=FALSE}
 ces24_educ_align <- ces |>
   filter(year == 2024) |>
   measure_alignment(
     ques_stem="(abort|immig|enviro|guns|military|trade)",
-    group_col="educ4",
+    group_col="educ5",
     id_col="id"
   )
 
