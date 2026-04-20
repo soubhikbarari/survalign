@@ -22,7 +22,7 @@ library(knitr)
 
 ## Why Measure Group Alignment?
 
-> **Polling a group on a single issue is straightforward — but democracy rarely works one issue at a time. Political coalitions, social movements, and interest groups succeed or fail based on whether their members can agree across a *basket of issues*, not just one in isolation.**
+> **Polling group preferences on a single issue is straightforward, but democracy doesn't work one issue at a time. Political coalitions, social movements, and interest groups succeed or fail based on whether their members can agree across a *basket of issues*, not just one in isolation.**
 
 Consider two hypothetical coalitions:
 
@@ -31,7 +31,7 @@ Consider two hypothetical coalitions:
 
 A traditional issue-by-issue analysis would treat both coalitions as equally unified. But anyone who has watched politics knows they are not. Coalition A can reliably deliver votes, endorsements, and coordinated pressure. Coalition B is a paper majority that fragments the moment it has to act collectively.
 
-**Group alignment measures** fill this gap. Rather than asking "what does this group believe on each issue?", they ask "how unified is this group across its issue positions as a whole?"
+Group alignment measures fill this gap. Rather than asking "what does this group believe on each issue?", they ask "how unified is this group across its issue positions as a whole?"
 
 ---
 
@@ -99,7 +99,7 @@ Even when each issue individually commands majority support within a group, the 
 
 `plot_cumulative_majority()` makes this visible. For each group, it overlays per-issue support (grey bar) against the cumulative share that supports that issue *and all more-popular ones above it* (black bar):
 
-```{r cumul-support-motivation, fig.height = 7}
+```{r cumul-support-motivation, fig.height = 5.5}
 plot_cumulative_majority(align)
 ```
 
@@ -117,11 +117,11 @@ align$respondent_alignment |>
   slice_sample(n = 12) |>
   arrange(group, desc(prop_questions_aligned)) |>
   mutate(prop_questions_aligned = percent(prop_questions_aligned, accuracy = 1)) |>
-  rename(Group = group, `Respondent ID` = id, `Alignment score` = prop_questions_aligned) |>
+  rename(Group = group, `Respondent ID` = id, `Alignment` = prop_questions_aligned) |>
   kable()
 ```
 
-The key column is `prop_questions_aligned`: a value of 1.0 means perfect agreement with all group majority positions; 0.5 means agreement on half.
+An alignment of 1.0 means perfect agreement with all group majority positions; 0.5 means agreement on half.
 
 ---
 
@@ -131,7 +131,7 @@ The key column is `prop_questions_aligned`: a value of 1.0 means perfect agreeme
 
 $$\bar{a}_g = \frac{1}{N_g} \sum_{i \in g} a_i$$
 
-where $a_i$ is the share of issues on which respondent $i$ agrees with the group majority. Note that if we are inferring support about a population and survey weights are available, this would be expressed as a weighted mean - for simplicity, let's skip the weights.
+where $a_i$ is the share of issues on which respondent $i$ agrees with the group majority. Note that if we are inferring support about a population and survey weights are available, this would be expressed as a weighted mean. For simplicity, let's skip the weights.
 
 The alignment mean is an intuitive summary of how cohesive a coalition is. An alignment mean of 80% means the average member agrees with the group majority on 4 out of 5 issues; one of 55% means barely more than half.
 
@@ -244,7 +244,7 @@ summary(align) |>
   select(group, cumulative_issue_alignment_n, cumulative_issue_alignment_prop) |>
   mutate(cumulative_issue_alignment_prop = percent(cumulative_issue_alignment_prop, accuracy = 1)) |>
   rename(
-    Group                       = group,
+    Group = group,
     `Issues w/ majority support (N)` = cumulative_issue_alignment_n,
     `Issues w/ majority support (%)` = cumulative_issue_alignment_prop
   ) |>
@@ -266,7 +266,7 @@ The alignment curve is the most complete picture of group cohesion. It doesn't r
 The curve encodes the earlier metrics as readable points: the x-value where the horizontal 50% line intersects the curve gives $\alpha_g$; the y-value at $t = 1$ gives $A_g$. **Hover over any point to read an exact plain-English interpretation:**
 
 ```{r alignment-curve-plot, fig.height=5}
-plot_alignment_curve(align)
+plot_alignment_curve(align, interactive = TRUE)
 ```
 
 **How to interpret it:** The Cohesive coalition's curve stays near the top of the chart before declining — meaning large fractions of members are highly aligned. The Fragmented coalition's curve drops off quickly, indicating that requiring broad agreement rapidly excludes most members.

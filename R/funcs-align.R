@@ -55,7 +55,7 @@ measure_alignment <- function(
   
   question_labels <- dump_labels(data[ques_cols])
   
-  if (verbose) cat("\n[0/5] Pivotting...")
+  if (verbose) cat("\n[0/5] Pivoting...")
   data <- data |>
     labelled::unlabelled()
 

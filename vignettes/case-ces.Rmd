@@ -138,6 +138,8 @@ ces24_core_align |>
   plot_alignment_curve(group_colors=pid_colors, interactive=TRUE)
 ```
 
+Additionally, we can output a single dataframe with all of the metrics in one, using `summary()`: 
+
 ```{r summarise-ces-pid-alignment, eval=FALSE}
 summary(ces24_core_align, format="long")
 ```
@@ -173,6 +175,8 @@ ces24_core_align_na |>
 ## Alignment Over Time
 
 Policy preferences are not static, and neither is within-group consensus. `measure_alignment_waves()` computes alignment separately for each survey wave, allowing us to track whether groups are becoming more or less internally cohesive over time.
+
+To begin, let's actually check which issues questions are consistently asked over time. 
 
 ```{r check-ces-support-over-time, fig.height=10}
 # Temporal support
@@ -234,13 +238,19 @@ for (item in ces_spending_items) {
 cat('</ul>\n</details>\n\n')
 ```
 
-```{r ces-pid-spending-aligment-over-time, warning=FALSE, message=FALSE}
+One advantage of using the spending issue basket is that it is consistently asked in the same format across multiple waves othe CES.
+
+```{r ces-pid-spending-aligment-over-time-coverage, warning=FALSE, message=FALSE}
 # Plot support
 ces |>
   plot_support(wave_col="year", weight_col="weight", 
                group_col="pid3", ques_stem="spend") +
   ggtitle("Support for CES Spending Items")
+```
 
+We can see that the results are largely the same as with using the core issues basket.
+
+```{r ces-pid-spending-aligment-over-time, warning=FALSE, message=FALSE}
 # Measure alignment
 ces_spend_align <- ces |>
   measure_alignment_waves(
@@ -277,7 +287,7 @@ ces_spend_align |>
 
 Party ID is a natural grouping variable for studying policy alignment, but `survalign` works with any categorical grouping. Here we examine alignment on core policy items by racial/ethnic group, where the patterns of internal consensus may differ substantially from the partisan case.
 
-```{r ces-educ-align, warning=FALSE, message=FALSE}
+```{r ces-race-align, warning=FALSE, message=FALSE}
 ces24_race_align <- ces |>
   filter(year == 2024) |>
   measure_alignment(
@@ -287,5 +297,18 @@ ces24_race_align <- ces |>
   )
 
 ces24_race_align |>
-  plot_alignment_curve()
+  plot_alignment_curve(interactive = TRUE)
+```
+
+```{r ces-educ-align, warning=FALSE, message=FALSE}
+ces24_educ_align <- ces |>
+  filter(year == 2024) |>
+  measure_alignment(
+    ques_stem="(abort|immig|enviro|guns|military|trade)",
+    group_col="educ4",
+    id_col="id"
+  )
+
+ces24_educ_align |>
+  plot_alignment_curve(interactive = TRUE)
 ```

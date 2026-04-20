@@ -55,7 +55,7 @@ reference:
   contents:
   - binarize_responses
 
-- title: survalign Objects
+- title: Methods
   desc: Methods for survalign result objects.
   contents:
   - print.survalign
