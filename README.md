@@ -22,6 +22,8 @@ cohesive. A group may show 60% support on each of five issues
 separately, yet only 10% of its members agree on all five at once.
 survalign quantifies this gap with a suite of alignment metrics.
 
+<a class="btn btn-primary" href="https://osf.io/preprints/socarxiv/4xgfb_v1" role="button">Read the paper</a>
+
 ## Key Metrics
 
 Each metric captures a different facet of how cohesive a group is across
@@ -120,3 +122,5 @@ website](https://soubhikbarari.github.io/survalign/).
 - [CES Case
   Study](https://soubhikbarari.github.io/survalign/articles/case-ces.html)
   — partisan alignment in the Cooperative Election Study
+
+Read the full [methodological paper](https://osf.io/preprints/socarxiv/4xgfb_v1).
