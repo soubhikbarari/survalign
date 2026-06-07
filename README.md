@@ -22,7 +22,7 @@ cohesive. A group may show 60% support on each of five issues
 separately, yet only 10% of its members agree on all five at once.
 survalign quantifies this gap with a suite of alignment metrics.
 
-<a class="btn btn-primary" href="https://osf.io/preprints/socarxiv/4xgfb_v1" role="button">Read the paper</a>
+<a class="btn btn-primary" href="https://osf.io/preprints/socarxiv/4xgfb_v1" role="button" target="_blank">Read the paper</a>
 
 ## Key Metrics
 
