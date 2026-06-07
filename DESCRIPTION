@@ -1,6 +1,6 @@
 Package: survalign
 Title: Measure Group Alignment in Public Opinion
-Version: 0.0.1
+Version: 1.0.0
 Authors@R:
     person("Soubhik", "Barari", , "barari-soubhik@norc.org", role = c("aut", "cre"))
 Description: Tools for measuring group alignment within groups using cross-sectional or time series survey data.
